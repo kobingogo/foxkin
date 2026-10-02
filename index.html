@@ -683,6 +683,13 @@
   .memory-dialog h2{ font-size: 19px; margin: 0; }
   .memory-dialog p{ font-size: 13px; line-height: 1.6; color: #667085; }
   .memory-dialog .soft-btn{ background: #fff; color: #172039; border-color: #dce1e8; }
+  .sound-note{ font-size: 11px; line-height: 1.6; color: var(--fg-soft); margin: 12px 0 0; }
+  .habit-settings{ padding: 12px 14px; border: 1px solid #dce1e8; border-radius: 14px; margin: 14px 0; }
+  .habit-settings summary{ font-size: 13px; font-weight: 600; cursor: pointer; }
+  .habit-settings label{ display: block; margin: 14px 0; font-size: 12px; color: #667085; }
+  .habit-settings select{ display: block; width: 100%; margin-top: 6px; padding: 9px 10px;
+    background: #fff; color: #172039; border: 1px solid #dce1e8; border-radius: 9px; font: inherit; }
+  .memory-dialog .sound-note{ color: #667085; }
   .memory-list{ padding: 0; list-style: none; }
   .memory-list li{ padding: 13px 0; border-top: 1px solid #e3e7ee; font-size: 13px; line-height: 1.65; }
   .memory-list small{ display: block; color: #667085; }
@@ -783,6 +790,23 @@
       </div>
       <button class="skip-btn" id="finishSkip" type="button">今天安静收工</button>
     </div>
+    <div id="eventPanel" hidden>
+      <h1 id="eventTitle" tabindex="-1">下次见面，留个招呼。</h1>
+      <p class="comp-copy" id="eventCopy"></p>
+      <div id="welcomeChoices" class="comp-row" hidden>
+        <button class="primary-btn" id="eventWink" type="button">眨眨眼</button>
+        <button class="soft-btn" id="eventSmile" type="button">笑一下</button>
+        <button class="skip-btn" id="eventFamiliar" type="button">保持现在这样</button>
+      </div>
+      <div id="soundChoices" hidden>
+        <div class="comp-row">
+          <button class="soft-btn" id="eventPreviewSound" type="button">听一下</button>
+          <button class="primary-btn" id="eventKeepSound" type="button">留作收工旋律</button>
+          <button class="skip-btn" id="eventNoSound" type="button">不用旋律</button>
+        </div>
+        <p class="sound-note" id="eventSoundNote"></p>
+      </div>
+    </div>
     <div class="comp-footer">
       <label><input id="quietInput" type="checkbox" /> 安静陪伴</label>
       <span>随时收工，不用坚持满时间</span>
@@ -793,7 +817,29 @@
 
   <dialog class="memory-dialog" id="memoryDialog" aria-labelledby="memoryTitle">
     <header><h2 id="memoryTitle">我们的共同经历</h2><button class="soft-btn" id="memoryClose" type="button">关闭</button></header>
+    <p id="togetherText"></p>
     <p id="habitText">我们的招呼还没定下来，慢慢来。</p>
+    <details class="habit-settings" id="habitSettings">
+      <summary>调整我们的习惯</summary>
+      <label>见面怎么欢迎你
+        <select id="greetingSetting" aria-label="欢迎方式">
+          <option value="familiar">熟悉的摸头或碰鼻子</option>
+          <option value="wink">眨眨眼</option><option value="smile">笑一下</option>
+        </select>
+      </label>
+      <label>收工怎么打招呼
+        <select id="ritualSetting" aria-label="收工招呼">
+          <option value="">还没定下来</option><option value="head">摸摸头</option><option value="nose">碰碰鼻子</option>
+        </select>
+      </label>
+      <label>收工的声音
+        <select id="soundSetting" aria-label="收工旋律">
+          <option value="off">不加旋律</option><option value="chime">我们的三音旋律</option>
+        </select>
+      </label>
+      <button class="soft-btn" id="previewSound" type="button">试听收工旋律</button>
+      <p class="sound-note">习惯随时可改。安静陪伴或音量为零时，旋律不会播放。</p>
+    </details>
     <ul class="memory-list" id="memoryList"></ul>
     <p id="recordCount"></p>
     <p>名字和经历保存在当前浏览器。换设备或清理浏览器前，可以留一份备份。</p>
@@ -923,7 +969,7 @@
   </script>
 
   <script type="module">
-  import { SAVE_KEY, newState, parseState, beginSession, elapsed, checkpoint, pauseSession, resumeSession, recoverSession, finishSession } from './companion.mjs';
+  import { SAVE_KEY, newState, parseState, beginSession, elapsed, checkpoint, pauseSession, resumeSession, recoverSession, finishSession, togetherDays, chooseEvent } from './companion.mjs';
   import * as THREE from 'three';
   import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
   import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -1363,6 +1409,24 @@
       g.gain.linearRampToValueAtTime(big ? 0.32 : 0.22, t + 0.008);
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
       if (this.ctx.state !== 'running') this.ctx.resume();
+    }
+
+    chime() {
+      if (this.muted || this.volume <= 0) return false;
+      this.init();
+      if (this.ctx.state !== 'running') this.ctx.resume().catch(() => toast('声音暂时没有打开，可以再试一次。'));
+      const startAt = this.ctx.currentTime + 0.02;
+      for (const [i, note] of [72, 76, 79].entries()) {
+        const t = startAt + i * 0.18;
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.14, t + 0.018);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+        gain.connect(this.analyser);
+        const tone = this.osc('sine', mtof(note), t, t + 0.7);
+        tone.connect(gain);
+      }
+      return true;
     }
 
     /** 表情音效。gesture = 由用户点击触发，可以顺手创建/唤醒 AudioContext */
@@ -2804,13 +2868,13 @@
     function busy(t) { return acts.some((a) => a.name !== 'blink' && t < a.t0 + ACTIONS[a.name].dur); }
 
     /** 播一个表情。gesture = 用户手势触发（可以顺便创建 AudioContext） */
-    function play(name, gesture) {
+    function play(name, gesture, silent = false) {
       const A = ACTIONS[name];
       if (!A) return;
       // 同名动作正在播就重来，不叠两份
       for (let i = acts.length - 1; i >= 0; i--) if (acts[i].name === name) acts.splice(i, 1);
       acts.push({ name, t0: nowT });
-      if (A.sfx) radio.sfx(A.sfx, gesture);
+      if (A.sfx && !silent) radio.sfx(A.sfx, gesture);
     }
 
     /* ---------- 舌头 ----------
@@ -3097,11 +3161,11 @@
     }
 
     /** 有人碰它：重置睡觉计时；正睡着就吓醒。返回 true = 这次点击被"叫醒"吃掉了 */
-    function touch(gesture) {
+    function touch(gesture, silent = false) {
       lastTouch = nowT;
       if (asleep || sleep > 0.4) {
         asleep = false;
-        play('surprise', gesture);
+        play('surprise', gesture, silent);
         acts.push({ name: 'blink', t0: nowT + 0.5 }, { name: 'blink', t0: nowT + 0.75 });
         discover('sleep');
         return true;
@@ -3116,6 +3180,7 @@
 
     return {
       out: o, build, sync, update, play, touch, petAt,
+      reset() { acts.length = 0; pet = petTarget = 0; },
       keepAwake() { if (!asleep) lastTouch = nowT; },
       get asleep() { return asleep; },
       sleepNow() { asleep = true; lastTouch = -1e9; },
@@ -3214,7 +3279,7 @@
   // Touch feedback is independent of relationship progress.
 
   const _heartVel = new THREE.Vector3();
-  function doBoop(hitPoint) {
+  function doBoop(hitPoint, silent = false) {
     boops++;
     try { localStorage.setItem('foxkin.boops', String(boops)); } catch (_) {}
     $('boopN').textContent = boops;
@@ -3226,7 +3291,7 @@
     face.play('squeeze');
 
     const big = boops % 10 === 0;
-    radio.boop(big);
+    if (!silent) radio.boop(big);
     const n = big ? 9 : 3;
     for (let i = 0; i < n; i++) {
       _heartVel.set((Math.random() - 0.5) * 0.7, 0.35 + Math.random() * 0.35, 0.2 + Math.random() * 0.2);
@@ -3905,18 +3970,19 @@
     // ponytail: suspension is inferred from gaps; add lifecycle signals if ordinary background use trips this.
     const suspendGapMs = 120000;
     let greeted = false, greetingPending = false, receipt = '', dueAnnounced = false;
-    let saveWarning = '';
+    let saveWarning = '', migrateOnLoad = false;
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      if (raw) state = parseState(raw);
+      if (raw) { state = parseState(raw); migrateOnLoad = JSON.parse(raw).version === 1; }
     } catch (error) {
       writeLocked = true;
       saveWarning = '暂时读不到原存档，原数据未被覆盖。你仍可体验；请先备份或恢复一份有效存档。';
     }
     recoverSession(state);
-    greetingPending = !!state.ritual;
+    greetingPending = !!state.ritual || state.greeting !== 'familiar';
     radio.setOutput(state.volume, state.quiet);
 
+    const greetingName = (g) => ({ familiar: '熟悉的招呼', wink: '眨眨眼', smile: '笑一下' }[g]);
     const ritualName = (r) => r === 'head' ? '摸摸头' : '碰碰鼻子';
     const durationText = (ms) => ms < 60000 ? '不到 1 分钟' : `${Math.floor(ms / 60000)} 分钟`;
     const outcomeName = { done: '完成了', some: '做了一些', rest: '今天先这样', '': '' };
@@ -3961,15 +4027,22 @@
     }
     function render() {
       const a = state.active;
-      $('idlePanel').hidden = !!a;
+      $('idlePanel').hidden = !!a || !!state.pendingEvent;
+      $('eventPanel').hidden = !!a || !state.pendingEvent;
+      $('welcomeChoices').hidden = state.pendingEvent !== 'welcome';
+      $('soundChoices').hidden = state.pendingEvent !== 'sound';
+      $('eventTitle').textContent = state.pendingEvent === 'welcome' ? '下次你来，我这样欢迎你？' : '把这个小声音，留给我们收工。';
+      $('eventCopy').textContent = state.pendingEvent === 'welcome' ? `我们已经一起待过 ${togetherDays(state)} 个日子。给下次见面留个招呼，也可以保持现在这样。` : '给熟悉的招呼配一段三音旋律。不加声音也很好。';
+      $('eventPreviewSound').disabled = state.quiet || state.volume <= 0 || tabConflict;
+      $('eventSoundNote').textContent = state.quiet || state.volume <= 0 ? '现在不会出声；关掉安静陪伴并调高音量，就可以试听。' : '只在你收工时响起。习惯随时可以改。';
       $('activePanel').hidden = !a || a.phase === 'closing';
       $('closingPanel').hidden = a?.phase !== 'closing';
       $('foxName').value = state.name;
       $('quietInput').checked = state.quiet;
       $('volumeInput').value = state.volume;
       $('greetBtn').hidden = !greetingPending || !!a;
-      $('greetBtn').textContent = state.ritual ? `${ritualName(state.ritual)}，打个招呼` : '打个招呼';
-      $('welcomeText').textContent = receipt ? '收工啦。谢谢你来。' : state.ritual ? (state.ritual === 'head' ? '它歪歪头，等你像上次那样摸摸。' : '它抬起鼻子，等你们熟悉的招呼。') : '我陪你一会儿。';
+      $('greetBtn').textContent = state.greeting === 'familiar' ? `${ritualName(state.ritual)}，打个招呼` : state.greeting === 'wink' ? '回应它的眨眼' : '回应它的笑容';
+      $('welcomeText').textContent = receipt ? '收工啦。谢谢你来。' : state.greeting === 'wink' ? '它眨眨眼，把熟悉的招呼留给你。' : state.greeting === 'smile' ? '它眯眼笑了笑，欢迎你回来。' : state.ritual ? (state.ritual === 'head' ? '它歪歪头，等你像上次那样摸摸。' : '它抬起鼻子，等你们熟悉的招呼。') : '我陪你一会儿。';
       const latest = state.records.at(-1);
       $('recentText').textContent = receipt || (latest ? `上次一起待了${durationText(latest.elapsedMs)}。今天从一点点开始也可以。` : '不用准备好所有事，先从一点点开始。');
       $('closingCopy').textContent = state.ritual ? `还是我们的${ritualName(state.ritual)}？也可以换个招呼。` : '选个我们的收工招呼，下次我还记得。';
@@ -3978,34 +4051,37 @@
       document.body.classList.toggle('is-accompanying', !!a);
       if (a) renderClock();
       notice();
-      for (const id of ['foxName', 'beginBtn', 'pauseBtn', 'extendBtn', 'endBtn', 'finishHead', 'finishNose', 'finishSkip', 'quietInput', 'volumeInput']) $(id).disabled = tabConflict;
+      for (const id of ['foxName', 'beginBtn', 'pauseBtn', 'extendBtn', 'endBtn', 'finishHead', 'finishNose', 'finishSkip', 'quietInput', 'volumeInput', 'eventWink', 'eventSmile', 'eventFamiliar', 'eventKeepSound', 'eventNoSound', 'greetingSetting', 'ritualSetting', 'soundSetting']) $(id).disabled = tabConflict;
     }
-    function respond(ritual) {
-      face.touch(true);
+    function respond(ritual, closing = false) {
+      face.touch(true, closing);
       if (ritual === 'head') {
         face.petAt(0.38, 0.9);
-        face.play('smile', true);
+        face.play('smile', true, closing);
       } else if (ritual === 'nose' && model) {
-        doBoop(boxPoint(NOSE, new THREE.Vector3()).sub(rigOrigin).applyMatrix4(rig.matrixWorld));
-        face.play('lickNose', true);
-      } else face.play('smile', true);
+        doBoop(boxPoint(NOSE, new THREE.Vector3()).sub(rigOrigin).applyMatrix4(rig.matrixWorld), closing);
+        face.play('lickNose', true, closing);
+      } else face.play('smile', true, closing);
+      if (closing && state.closingSound === 'chime') radio.chime();
     }
     function greet() {
       if (!model || greeted || !greetingPending || state.active) return;
       greeted = true;
       lastUserInput = nowT;
-      face.touch(false);
-      face.play(state.ritual === 'head' ? 'inviteHead' : 'inviteNose');
+      face.touch(false, true);
+      face.reset();
+      face.play(state.greeting === 'wink' ? 'winkR' : state.greeting === 'smile' ? 'smile' : state.ritual === 'head' ? 'inviteHead' : 'inviteNose', false, true);
     }
     function greetingTouch(zone) {
-      if (!greetingPending || state.active || zone !== state.ritual) return;
+      if (!greetingPending || state.active || (state.greeting === 'familiar' ? zone !== state.ritual : !['head', 'nose', 'eyeL', 'eyeR'].includes(zone))) return;
       greetingPending = false;
-      $('welcomeText').textContent = '嗯，就是这个招呼。你来了。';
+      $('welcomeText').textContent = state.greeting === 'familiar' ? '嗯，就是这个招呼。你来了。' : '你来了，我们又见面了。';
       $('greetBtn').hidden = true;
     }
     $('greetBtn').addEventListener('click', () => {
-      respond(state.ritual);
-      greetingTouch(state.ritual);
+      if (state.greeting === 'familiar') respond(state.ritual);
+      else { face.touch(true); face.play(state.greeting === 'wink' ? 'winkR' : 'smile', true); }
+      greetingTouch(state.greeting === 'familiar' ? state.ritual : 'head');
     });
     $('beginForm').addEventListener('submit', (event) => {
       event.preventDefault();
@@ -4037,8 +4113,8 @@
       pauseSession(state, 'closing'); stopMusic();
       $('outcomeInput').value = '';
       $('sessionAnnouncement').hidden = true;
-      face.touch(true);
-      face.play(state.ritual === 'nose' ? 'inviteNose' : 'inviteHead');
+      face.touch(true, true);
+      face.play(state.ritual === 'nose' ? 'inviteNose' : 'inviteHead', false, true);
       save(); render(); $(state.ritual === 'nose' ? 'finishNose' : 'finishHead').focus();
     });
     function finish(ritual) {
@@ -4047,9 +4123,9 @@
       if (!record) return;
       const persisted = save();
       receipt = `今天一起待了${durationText(record.elapsedMs)}。${persisted ? '这段经历已经留下了。' : '这段经历暂留在本页，请下载备份。'}`;
-      if (ritual) respond(ritual); else face.play('smile');
+      if (ritual) respond(ritual, true); else face.play('smile', false, true);
       $('intentInput').value = '';
-      render(); $('beginBtn').focus();
+      render(); $(state.pendingEvent ? 'eventTitle' : 'beginBtn').focus();
     }
     $('finishHead').addEventListener('click', () => finish('head'));
     $('finishNose').addEventListener('click', () => finish('nose'));
@@ -4070,32 +4146,79 @@
       state.quiet = event.target.checked;
       radio.setOutput(state.volume, state.quiet);
       if (state.quiet) stopMusic(); else if (state.active?.phase === 'running') start();
-      save();
+      save(); render();
     });
     $('volumeInput').addEventListener('input', (event) => {
       state.volume = Number(event.target.value);
       radio.setOutput(state.volume, state.quiet);
     });
-    $('volumeInput').addEventListener('change', save);
+    $('volumeInput').addEventListener('change', () => { save(); render(); });
     $('exploreBtn').addEventListener('click', () => {
       const open = document.body.classList.toggle('is-exploring');
       $('exploreBtn').setAttribute('aria-expanded', String(open));
     });
     function renderMemory() {
-      $('habitText').textContent = state.ritual ? `我们的招呼：${ritualName(state.ritual)}。下次见面，我也会这样等你。` : '我们的招呼还没定下来，慢慢来。';
+      $('togetherText').textContent = state.records.length ? `我们在 ${togetherDays(state)} 个日子里一起待过。不用连续，也不怕隔几天回来。` : '第一次收工后，我们会在这里留下经历。';
+      $('habitText').textContent = `欢迎：${greetingName(state.greeting)} · 收工：${state.ritual ? ritualName(state.ritual) : '慢慢定下来'} · 旋律：${state.closingSound === 'chime' ? '三音旋律' : '不加旋律'}`;
+      $('greetingSetting').value = state.greeting;
+      $('ritualSetting').value = state.ritual || '';
+      $('soundSetting').value = state.closingSound;
+      $('previewSound').disabled = state.quiet || state.volume <= 0 || tabConflict;
       const list = $('memoryList');
       list.replaceChildren();
       for (const r of state.records.slice(-20).reverse()) {
         const li = document.createElement('li'), detail = document.createElement('small'), intent = document.createElement('strong');
-        const day = new Date(r.endedAt).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+        const [year, month, date] = r.day.split('-');
+        const day = `${year}年${Number(month)}月${Number(date)}日`;
         li.append(`${day} · 一起待了${durationText(r.elapsedMs)}`);
         intent.textContent = r.intent || '一起待了一会儿';
-        detail.textContent = [r.station, outcomeName[r.outcome], r.ritual ? ritualName(r.ritual) : '安静收工'].filter(Boolean).join(' · ');
+        detail.textContent = [r.station, outcomeName[r.outcome], r.ritual ? ritualName(r.ritual) : '安静收工', r.closingSound === 'chime' ? '三音旋律' : ''].filter(Boolean).join(' · ');
         li.append(intent, detail); list.append(li);
       }
       if (!state.records.length) { const li = document.createElement('li'); li.textContent = '第一次收工后，我们会在这里留下一段经历。'; list.append(li); }
       $('recordCount').textContent = state.records.length > 20 ? `显示最近 20 条，共 ${state.records.length} 条。备份包含全部经历。` : '';
     }
+    function changeGreeting() {
+      greeted = false;
+      greetingPending = !!state.ritual || state.greeting !== 'familiar';
+      receipt = '';
+      render();
+      if (!$('memoryDialog').open) greet();
+    }
+    function selectEvent(choice) {
+      if (tabConflict) return;
+      const kind = state.pendingEvent;
+      if (!chooseEvent(state, choice)) return;
+      save();
+      if (kind === 'welcome') changeGreeting();
+      else { if (choice === 'chime') radio.chime(); render(); }
+      $('beginBtn').focus();
+    }
+    $('eventWink').addEventListener('click', () => selectEvent('wink'));
+    $('eventSmile').addEventListener('click', () => selectEvent('smile'));
+    $('eventFamiliar').addEventListener('click', () => selectEvent(state.greeting));
+    $('eventKeepSound').addEventListener('click', () => selectEvent('chime'));
+    $('eventNoSound').addEventListener('click', () => selectEvent('off'));
+    $('eventPreviewSound').addEventListener('click', () => radio.chime());
+    $('previewSound').addEventListener('click', () => radio.chime());
+    $('greetingSetting').addEventListener('change', (event) => {
+      if (tabConflict) return;
+      if (state.pendingEvent === 'welcome') chooseEvent(state, event.target.value);
+      else state.greeting = event.target.value;
+      save(); changeGreeting(); renderMemory();
+    });
+    $('ritualSetting').addEventListener('change', (event) => {
+      if (tabConflict) return;
+      state.ritual = event.target.value || null;
+      save(); changeGreeting(); renderMemory();
+    });
+    $('soundSetting').addEventListener('change', (event) => {
+      if (tabConflict) return;
+      if (state.pendingEvent === 'sound') chooseEvent(state, event.target.value);
+      else state.closingSound = event.target.value;
+      save(); render(); renderMemory();
+    });
+    $('memoryDialog').addEventListener('close', greet);
     $('memoryBtn').addEventListener('click', () => { renderMemory(); $('importNotice').textContent = ''; $('memoryDialog').showModal(); });
     $('memoryClose').addEventListener('click', () => $('memoryDialog').close());
     $('exportBtn').addEventListener('click', () => {
@@ -4118,9 +4241,10 @@
         // Write first: a quota/permission failure leaves the current state untouched.
         localStorage.setItem(SAVE_KEY, JSON.stringify(restored));
         state = restored; writeLocked = tabConflict = false; saveWarning = ''; receipt = '';
-        greeted = false; greetingPending = !!state.ritual; dueAnnounced = false;
+        greeted = false; greetingPending = !!state.ritual || state.greeting !== 'familiar'; dueAnnounced = false;
         stopMusic(); radio.setOutput(state.volume, state.quiet);
-        render(); renderMemory(); greet();
+        render(); renderMemory();
+        if (!$('memoryDialog').open) greet();
         $('importNotice').textContent = '备份已恢复。';
       } catch (error) { $('importNotice').textContent = error.message || '恢复失败，原存档未被替换。'; }
     });
@@ -4156,10 +4280,11 @@
       saveWarning = '另一个页面更新了经历，本页已暂停。请刷新以查看最新存档；本页尚未保存的经历可以先下载备份。';
       render();
     });
+    if (migrateOnLoad) save();
     render();
     return { greet, greetingTouch, enableMusic,
       get quiet() { return state.quiet; },
-      get greetingRitual() { return greetingPending && !state.active ? state.ritual : null; },
+      get greetingRitual() { return greetingPending && !state.active && state.greeting === 'familiar' ? state.ritual : null; },
       get isActive() { return !!state.active; },
       get isRunning() { return state.active?.phase === 'running'; }
     };

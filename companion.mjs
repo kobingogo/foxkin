@@ -2,19 +2,59 @@
 export const SAVE_KEY = 'foxkin.companion.v1';
 const PHASES = ['running', 'paused', 'closing', 'recovery'];
 const RITUALS = [null, 'head', 'nose'];
+const GREETINGS = ['familiar', 'wink', 'smile'];
+const SOUNDS = ['off', 'chime'];
 const OUTCOMES = ['', 'done', 'some', 'rest'];
 const amount = (x) => Number.isSafeInteger(x) && x >= 0;
 const date = (x) => amount(x) && x <= 8640000000000000;
 const text = (x, limit) => typeof x === 'string' && x.length <= limit;
 
 export function newState() {
-  return { version: 1, name: '小狐', ritual: null, quiet: false, volume: 0.65, active: null, records: [] };
+  return { version: 2, name: '小狐', ritual: null, greeting: 'familiar', closingSound: 'off',
+    events: { welcome: false, sound: false, lastDay: null }, pendingEvent: null,
+    quiet: false, volume: 0.65, active: null, records: [] };
+}
+
+export function localDay(time) {
+  const d = new Date(time);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function validDay(day) {
+  if (typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
+  const d = new Date(`${day}T12:00:00Z`);
+  return Number.isFinite(d.getTime()) && d.toISOString().slice(0, 10) === day;
+}
+
+export function togetherDays(state) {
+  return new Set(state.records.map((r) => r.day)).size;
+}
+
+function offerEvent(state, day) {
+  if (state.pendingEvent || state.events.lastDay === day) return;
+  const days = togetherDays(state);
+  if (days >= 3 && !state.events.welcome) state.pendingEvent = 'welcome';
+  else if (days >= 7 && !state.events.sound) state.pendingEvent = 'sound';
+  if (state.pendingEvent) state.events.lastDay = day;
+}
+
+export function chooseEvent(state, choice, now = Date.now()) {
+  const kind = state.pendingEvent;
+  if (!kind) return false;
+  if (!(kind === 'welcome' ? GREETINGS : SOUNDS).includes(choice)) throw new Error('请选择有效的习惯。');
+  if (kind === 'welcome') state.greeting = choice;
+  else state.closingSound = choice;
+  state.events[kind] = true;
+  // A deferred choice also occupies today's event slot; no second story immediately follows it.
+  state.events.lastDay = localDay(now);
+  state.pendingEvent = null;
+  return true;
 }
 
 // Copy known fields only. Invalid imports never replace a working save.
 export function parseState(raw) {
   const s = JSON.parse(raw);
-  if (!s || s.version !== 1 || !text(s.name, 12) || !s.name.trim() ||
+  if (!s || ![1, 2].includes(s.version) || !text(s.name, 12) || !s.name.trim() ||
       !RITUALS.includes(s.ritual) || typeof s.quiet !== 'boolean' ||
       typeof s.volume !== 'number' || !Number.isFinite(s.volume) || s.volume < 0 || s.volume > 1 || !Array.isArray(s.records)) {
     throw new Error('这份存档的格式或版本不受支持。');
@@ -25,8 +65,12 @@ export function parseState(raw) {
         !text(r.station, 40) || !OUTCOMES.includes(r.outcome) || !RITUALS.includes(r.ritual)) {
       throw new Error('共同经历记录不完整，原存档已保留。');
     }
+    // v1 did not capture the local date. Derive it once at migration; v2 keeps it across time zones.
+    const day = s.version === 1 ? localDay(r.endedAt) : r.day;
+    const closingSound = s.version === 1 ? 'off' : r.closingSound;
+    if (!validDay(day) || !SOUNDS.includes(closingSound)) throw new Error('经历中的日期或声音格式有误。');
     return { id: r.id, startedAt: r.startedAt, endedAt: r.endedAt, elapsedMs: r.elapsedMs,
-      intent: r.intent, station: r.station, outcome: r.outcome, ritual: r.ritual };
+      intent: r.intent, station: r.station, outcome: r.outcome, ritual: r.ritual, day, closingSound };
   });
   const ids = new Set(records.map((r) => r.id));
   if (ids.size !== records.length) throw new Error('存档包含重复的经历。');
@@ -44,7 +88,23 @@ export function parseState(raw) {
       elapsedMs: a.elapsedMs, plannedMs: a.plannedMs, runningSince: a.runningSince,
       phase: a.phase, intent: a.intent, station: a.station };
   }
-  return { version: 1, name: s.name.trim(), ritual: s.ritual, quiet: s.quiet, volume: s.volume, active, records };
+  let greeting = 'familiar', closingSound = 'off', pendingEvent = null;
+  let events = { welcome: false, sound: false, lastDay: null };
+  if (s.version === 2) {
+    if (!GREETINGS.includes(s.greeting) || !SOUNDS.includes(s.closingSound) ||
+        !s.events || typeof s.events.welcome !== 'boolean' || typeof s.events.sound !== 'boolean' ||
+        (s.events.lastDay !== null && !validDay(s.events.lastDay)) ||
+        ![null, 'welcome', 'sound'].includes(s.pendingEvent)) throw new Error('习惯存档格式有误。');
+    greeting = s.greeting; closingSound = s.closingSound; pendingEvent = s.pendingEvent;
+    events = { welcome: s.events.welcome, sound: s.events.sound, lastDay: s.events.lastDay };
+    const days = new Set(records.map((r) => r.day)).size;
+    if ((events.welcome && days < 3) || (events.sound && (days < 7 || !events.welcome)) ||
+        (pendingEvent === 'welcome' && (days < 3 || events.welcome)) ||
+        (pendingEvent === 'sound' && (days < 7 || !events.welcome || events.sound)) ||
+        (pendingEvent && !events.lastDay)) throw new Error('关系节点与经历不一致。');
+  }
+  return { version: 2, name: s.name.trim(), ritual: s.ritual, greeting, closingSound, events, pendingEvent,
+    quiet: s.quiet, volume: s.volume, active, records };
 }
 
 export function elapsed(session, now = Date.now()) {
@@ -102,9 +162,12 @@ export function finishSession(state, ritual, outcome = '', now = Date.now()) {
   if (!a || a.phase !== 'closing') return null;
   if (!RITUALS.includes(ritual) || !OUTCOMES.includes(outcome)) throw new Error('请选择有效的收工方式。');
   const record = { id: a.id, startedAt: a.startedAt, endedAt: Math.max(now, a.lastSeenAt),
-    elapsedMs: elapsed(a, now), intent: a.intent, station: a.station, outcome, ritual };
+    elapsedMs: elapsed(a, now), intent: a.intent, station: a.station, outcome, ritual,
+    day: localDay(Math.max(now, a.lastSeenAt)),
+    closingSound: ritual && !state.quiet && state.volume > 0 ? state.closingSound : 'off' };
   if (!state.records.some((r) => r.id === a.id)) state.records.push(record);
   if (ritual) state.ritual = ritual;
   state.active = null;
+  offerEvent(state, record.day);
   return record;
 }

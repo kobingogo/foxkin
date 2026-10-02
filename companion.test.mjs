@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { newState, parseState, beginSession, elapsed, checkpoint, pauseSession,
-  resumeSession, recoverSession, finishSession } from './companion.mjs';
+  resumeSession, recoverSession, finishSession, localDay, togetherDays, chooseEvent } from './companion.mjs';
 
 const s = newState();
 const start = 1700000000000;
@@ -40,9 +40,70 @@ assert.equal(midClosing.ritual, 'nose', 'skipping never forgets an existing ritu
 assert.equal(midClosing.records.length, 2, 'short sessions are valid');
 assert.deepEqual(parseState(JSON.stringify(midClosing)), midClosing);
 assert.throws(() => parseState('{broken'));
-assert.throws(() => parseState(JSON.stringify({ ...midClosing, version: 2 })));
+assert.throws(() => parseState(JSON.stringify({ ...midClosing, version: 99 })));
 assert.throws(() => parseState(JSON.stringify({ ...midClosing, ritual: 'unknown' })));
 assert.throws(() => parseState(JSON.stringify({ ...midClosing, records: [midClosing.records[0], midClosing.records[0]] })));
 assert.throws(() => parseState(JSON.stringify({ ...s, active: { ...s.active, elapsedMs: -1 } })));
 assert.throws(() => beginSession(newState(), { minutes: 0, station: '', id: 'invalid', now: start }));
-console.log('PASS: timestamp timing, pause/recovery, short closing, idempotence, memory persistence and import validation');
+const legacy = { ...midClosing, version: 1 };
+const migrated = parseState(JSON.stringify(legacy));
+assert.equal(migrated.version, 2);
+assert.equal(migrated.name, midClosing.name);
+assert.equal(migrated.records.length, midClosing.records.length);
+assert.equal(migrated.ritual, 'nose');
+assert.equal(migrated.greeting, 'familiar');
+assert.deepEqual(parseState(JSON.stringify(migrated)), migrated);
+
+const growth = newState();
+let n = 0;
+function closeOn(day) {
+  const now = new Date(2026, 9, day, 12).getTime();
+  beginSession(growth, { minutes: 10, station: '深夜 Lo-fi', id: `day-${++n}`, now });
+  pauseSession(growth, 'closing', now + 1000);
+  finishSession(growth, 'head', '', now + 2000);
+  return now;
+}
+closeOn(1); closeOn(1);
+assert.equal(togetherDays(growth), 1, 'multiple sessions on one date count once');
+closeOn(5);
+assert.equal(growth.pendingEvent, null);
+const third = closeOn(9);
+assert.equal(growth.pendingEvent, 'welcome', 'gaps do not reset relationship progress');
+assert.equal(parseState(JSON.stringify(growth)).pendingEvent, 'welcome', 'pending story survives refresh');
+assert.throws(() => chooseEvent(growth, 'unknown', third));
+chooseEvent(growth, 'wink', third);
+assert.equal(growth.greeting, 'wink');
+assert.equal(chooseEvent(growth, 'smile', third), false, 'repeated choice is idempotent');
+closeOn(9);
+assert.equal(togetherDays(growth), 3);
+closeOn(10); closeOn(11); closeOn(12);
+const seventh = closeOn(13);
+assert.equal(growth.pendingEvent, 'sound');
+chooseEvent(growth, 'chime', seventh);
+growth.quiet = true;
+closeOn(14);
+assert.equal(growth.closingSound, 'chime', 'quiet mode never forgets the sound preference');
+assert.equal(growth.records.at(-1).closingSound, 'off');
+growth.quiet = false;
+closeOn(14);
+assert.equal(growth.records.at(-1).closingSound, 'chime');
+assert.deepEqual(parseState(JSON.stringify(growth)), growth);
+assert.throws(() => parseState(JSON.stringify({ ...growth, greeting: 'unknown' })));
+assert.throws(() => parseState(JSON.stringify({ ...growth, records: growth.records.map((r) => ({ ...r, day: '2026-02-30' })) })));
+assert.throws(() => parseState(JSON.stringify({ ...newState(), pendingEvent: 'sound' })));
+
+const deferred = newState();
+deferred.records = growth.records.map((r) => ({ ...r }));
+deferred.pendingEvent = 'welcome'; deferred.events.lastDay = localDay(seventh);
+chooseEvent(deferred, 'familiar', seventh);
+beginSession(deferred, { minutes: 10, station: '深夜 Lo-fi', id: 'later-today', now: seventh + 5000 });
+pauseSession(deferred, 'closing', seventh + 6000);
+finishSession(deferred, null, '', seventh + 7000);
+assert.equal(deferred.pendingEvent, null, 'only one story on the date of a deferred choice');
+beginSession(deferred, { minutes: 10, station: '深夜 Lo-fi', id: 'next-date', now: seventh + 86400000 });
+pauseSession(deferred, 'closing', seventh + 86401000);
+finishSession(deferred, null, '', seventh + 86402000);
+assert.equal(deferred.pendingEvent, 'sound', 'later story remains available');
+const midnight = new Date(2026, 9, 1, 23, 59, 59).getTime();
+assert.notEqual(localDay(midnight), localDay(midnight + 2000), 'date follows local midnight');
+console.log('PASS: timing/recovery, migration, distinct local dates, persistent story choices, quiet sound preference, idempotence and import validation');
