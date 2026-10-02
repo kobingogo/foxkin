@@ -3106,6 +3106,14 @@
         A.f(u);
       }
 
+      // Reduced motion keeps a readable welcome pose instead of relying on a brief animation.
+      const welcomePose = companion?.greetingPose;
+      if (welcomePose === 'wink') {
+        o.closeR = max(o.closeR, 0.9); o.closeL = Math.min(o.closeL, 0.12); o.happy = max(o.happy, 0.5);
+      } else if (welcomePose === 'smile') {
+        o.closeR = max(o.closeR, 0.8); o.closeL = max(o.closeL, 0.8); o.happy = max(o.happy, 0.8);
+      }
+
       // An invitation remains visible until acknowledged, rather than disappearing after loading.
       const invitation = companion?.greetingRitual;
       if (invitation) {
@@ -3134,7 +3142,7 @@
       radio.purr(pet);
 
       // 睡觉：暂停状态下 25 秒没人理
-      if (!asleep && !radio.playing && !recorder.active && !companion?.isRunning && !companion?.greetingRitual && t - lastTouch > 25) asleep = true;
+      if (!asleep && !radio.playing && !recorder.active && !companion?.isRunning && !companion?.greetingRitual && !companion?.greetingPose && t - lastTouch > 25) asleep = true;
       sleep += ((asleep ? 1 : 0) - sleep) * (1 - Math.exp(-dt * (asleep ? 0.7 : 7)));
       if (sleep > 0.01) {
         o.closeL = max(o.closeL, sleep); o.closeR = max(o.closeR, sleep);
@@ -4287,6 +4295,7 @@
     render();
     return { greet, greetingTouch, enableMusic,
       get quiet() { return state.quiet; },
+      get greetingPose() { return reducedMotion.matches && greetingPending && !state.active ? state.greeting : null; },
       get greetingRitual() { return greetingPending && !state.active && state.greeting === 'familiar' ? state.ritual : null; },
       get isActive() { return !!state.active; },
       get isRunning() { return state.active?.phase === 'running'; }
