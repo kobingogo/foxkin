@@ -621,6 +621,93 @@
     .hint .opt{ display: none; }
     .cta{ bottom: 186px; }
   }
+
+  /* Companion: one quiet scene, with a beginning and an ending. */
+  [hidden]{ display: none !important; }
+  .poster__freq, .poster__sub, .cta, .hint, .boops{ display: none; }
+  .poster{ top: 26px; left: 30px; pointer-events: auto; }
+  .fox-name{ display: block; width: 190px; margin: 10px 0 4px; padding: 0;
+    background: transparent; border: 0; border-bottom: 1px solid transparent; color: var(--fg);
+    font: inherit; font-size: 30px; font-weight: 650; user-select: text; }
+  .fox-name:hover{ border-bottom-color: var(--glass-line); }
+  .poster__name{ margin: 8px 0 0; font-size: 12px; color: var(--fg-faint); }
+  .welcome{ max-width: 290px; margin: 8px 0 12px; font-size: 14px; line-height: 1.65; color: var(--fg-soft); }
+  .comp-nav{ top: 26px; right: 30px; display: flex; gap: 8px; }
+  .soft-btn{ border: 1px solid var(--glass-line); background: var(--glass); color: var(--fg);
+    border-radius: 12px; padding: 9px 13px; font: inherit; font-size: 13px; cursor: pointer; }
+  .soft-btn:hover{ background: var(--chip); }
+  button:disabled, input:disabled{ opacity: .5; cursor: default; }
+  :is(button, input, select, a):focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px; }
+  .companion{ left: 50%; bottom: 110px; transform: translateX(-50%); width: min(480px, calc(100vw - 32px));
+    padding: 18px 22px; border: 1px solid var(--glass-line); border-radius: 24px; background: var(--glass);
+    backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); box-shadow: 0 18px 50px -25px #0008; }
+  .companion h1{ margin: 0 0 6px; font-size: 19px; font-weight: 600; }
+  .comp-copy{ margin: 0 0 14px; color: var(--fg-soft); font-size: 13px; line-height: 1.65; }
+  .duration{ display: flex; gap: 8px; margin: 0 0 12px; padding: 0; border: 0; }
+  .duration legend{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .duration label{ flex: 1; cursor: pointer; }
+  .duration input{ position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .duration span{ display: block; padding: 9px; border-radius: 10px; text-align: center;
+    border: 1px solid var(--glass-line); color: var(--fg-soft); font-size: 13px; }
+  .duration input:checked + span{ background: var(--chip); color: var(--fg); border-color: var(--accent); }
+  .duration input:focus-visible + span{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .intent{ display: block; width: 100%; padding: 10px 12px; margin: 0 0 12px; border-radius: 11px;
+    border: 1px solid var(--glass-line); background: var(--chip); color: var(--fg); font: inherit; font-size: 13px; }
+  .intent::placeholder{ color: var(--fg-faint); }
+  .primary-btn{ background: var(--fg); color: #172039; border: 0; border-radius: 12px;
+    padding: 12px 18px; font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
+  body[data-station="green"] .primary-btn{ background: #1d3a24; color: #fff; }
+  .wide{ width: 100%; }
+  .comp-row{ display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .comp-footer{ display: flex; justify-content: space-between; gap: 8px; margin-top: 14px;
+    font-size: 11px; color: var(--fg-faint); }
+  .comp-footer label{ display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  .clock{ display: block; margin: 8px 0 12px; font-family: var(--num); font-size: 38px;
+    font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+  .companion select{ width: 100%; margin: 0 0 12px; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--glass-line); background: var(--chip); color: var(--fg); font: inherit; font-size: 13px; }
+  .companion option{ color: #172039; background: #fff; }
+  .skip-btn{ border: 0; background: transparent; color: var(--fg-soft); padding: 10px 0;
+    font: inherit; font-size: 12px; cursor: pointer; }
+  .save-notice{ margin: 10px 0 0; color: var(--fg); font-size: 12px; line-height: 1.6; }
+  .volume{ display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--fg-soft); }
+  .volume input{ width: 60px; accent-color: var(--accent); }
+  .player{ width: min(620px, calc(100vw - 32px)); }
+  .found, .faces, .rec{ display: none; }
+  body.is-exploring .found, body.is-exploring .faces, body.is-exploring .rec{ display: flex; }
+  body.is-exploring .found{ top: 74px; }
+  .memory-dialog{ width: min(480px, calc(100vw - 32px)); max-height: 80vh; padding: 24px;
+    border: 1px solid #dce1e8; border-radius: 22px; background: #f9fafc; color: #172039; }
+  .memory-dialog::backdrop{ background: #080e22aa; backdrop-filter: blur(6px); }
+  .memory-dialog header{ display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .memory-dialog h2{ font-size: 19px; margin: 0; }
+  .memory-dialog p{ font-size: 13px; line-height: 1.6; color: #667085; }
+  .memory-dialog .soft-btn{ background: #fff; color: #172039; border-color: #dce1e8; }
+  .memory-list{ padding: 0; list-style: none; }
+  .memory-list li{ padding: 13px 0; border-top: 1px solid #e3e7ee; font-size: 13px; line-height: 1.65; }
+  .memory-list small{ display: block; color: #667085; }
+  .memory-list strong{ display: block; font-weight: 550; overflow-wrap: anywhere; }
+  #importNotice{ color: #9d3740; }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 640px){
+    .poster{ top: 18px; left: 18px; }
+    .fox-name{ font-size: 24px; width: 135px; }
+    .welcome{ max-width: 210px; font-size: 12px; }
+    .comp-nav{ top: 18px; right: 16px; }
+    .comp-nav .soft-btn{ padding: 8px; font-size: 11px; }
+    .companion{ bottom: max(158px, calc(env(safe-area-inset-bottom) + 144px)); padding: 14px 18px; }
+    .companion h1{ font-size: 17px; }
+    .comp-copy{ margin-bottom: 10px; font-size: 12px; }
+    .volume{ margin-left: auto; order: 1; }
+    .player .dial{ order: 2; }
+    .clock{ font-size: 32px; }
+    body.is-exploring .faces{ bottom: 460px; }
+  }
+  @media (max-height: 650px) and (min-width: 641px){
+    .companion{ left: auto; right: 24px; bottom: 108px; transform: none; width: 350px; }
+  }
 </style>
 
 <script type="importmap">
@@ -643,12 +730,80 @@
 
   <div class="ui poster">
     <div class="poster__brand">FOXKIN <span class="onair"><i></i>ON AIR</span></div>
+    <input class="fox-name" id="foxName" aria-label="狐狸的名字" title="可以给它取个名字" maxlength="12" value="小狐" autocomplete="off" />
+    <p class="welcome" id="welcomeText">我陪你一会儿。</p>
+    <button class="soft-btn" id="greetBtn" type="button" hidden>打个招呼</button>
     <div id="stationText">
       <div class="poster__freq" id="freq">88.1<small>MHz</small></div>
       <div class="poster__name" id="sname">深夜 Lo-fi</div>
       <div class="poster__sub" id="ssub">适合写代码、发呆、假装在学习</div>
     </div>
   </div>
+
+  <nav class="ui comp-nav" aria-label="陪伴菜单">
+    <button class="soft-btn" id="memoryBtn" type="button">共同经历</button>
+    <button class="soft-btn" id="exploreBtn" type="button" aria-expanded="false">逗逗它</button>
+  </nav>
+
+  <section class="ui companion" aria-label="和狐狸待一会儿">
+    <div id="idlePanel">
+      <h1>我陪你一会儿。</h1>
+      <p class="comp-copy" id="recentText">不用准备好所有事，先从一点点开始。</p>
+      <form id="beginForm">
+        <fieldset class="duration">
+          <legend>陪伴时长</legend>
+          <label><input type="radio" name="minutes" value="10" /><span>10 分钟</span></label>
+          <label><input type="radio" name="minutes" value="25" checked /><span>25 分钟</span></label>
+          <label><input type="radio" name="minutes" value="45" /><span>45 分钟</span></label>
+        </fieldset>
+        <input class="intent" id="intentInput" aria-label="这会儿想做什么（可不填）" placeholder="这会儿想做什么？也可以不填" maxlength="100" autocomplete="off" />
+        <button class="primary-btn wide" id="beginBtn" type="submit">陪我一会儿</button>
+      </form>
+    </div>
+    <div id="activePanel" hidden>
+      <h1 id="sessionHeading">你做你的事，我在这里。</h1>
+      <p class="comp-copy" id="sessionCopy"></p>
+      <output class="clock" id="sessionClock" aria-label="剩余陪伴时间">25:00</output>
+      <div class="comp-row">
+        <button class="soft-btn" id="pauseBtn" type="button">暂停陪伴</button>
+        <button class="soft-btn" id="extendBtn" type="button" hidden>再陪 10 分钟</button>
+        <button class="primary-btn" id="endBtn" type="button">今天先收工</button>
+      </div>
+    </div>
+    <div id="closingPanel" hidden>
+      <h1>今天就到这里。</h1>
+      <p class="comp-copy" id="closingCopy">选个我们的收工招呼，下次我还记得。</p>
+      <select id="outcomeInput" aria-label="这段时间怎么样（可不选）">
+        <option value="">这段时间怎么样？可不选</option>
+        <option value="done">完成了</option><option value="some">做了一些</option><option value="rest">今天先这样</option>
+      </select>
+      <div class="comp-row">
+        <button class="primary-btn" id="finishHead" type="button">摸摸头，收工</button>
+        <button class="soft-btn" id="finishNose" type="button">碰碰鼻子，收工</button>
+      </div>
+      <button class="skip-btn" id="finishSkip" type="button">今天安静收工</button>
+    </div>
+    <div class="comp-footer">
+      <label><input id="quietInput" type="checkbox" /> 安静陪伴</label>
+      <span>随时收工，不用坚持满时间</span>
+    </div>
+    <p class="save-notice" id="saveNotice" role="status" hidden></p>
+    <p id="sessionAnnouncement" class="comp-copy" role="status" hidden></p>
+  </section>
+
+  <dialog class="memory-dialog" id="memoryDialog" aria-labelledby="memoryTitle">
+    <header><h2 id="memoryTitle">我们的共同经历</h2><button class="soft-btn" id="memoryClose" type="button">关闭</button></header>
+    <p id="habitText">我们的招呼还没定下来，慢慢来。</p>
+    <ul class="memory-list" id="memoryList"></ul>
+    <p id="recordCount"></p>
+    <p>名字和经历保存在当前浏览器。换设备或清理浏览器前，可以留一份备份。</p>
+    <div class="comp-row">
+      <button class="soft-btn" id="exportBtn" type="button">下载备份</button>
+      <button class="soft-btn" id="importBtn" type="button">恢复备份</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden />
+    </div>
+    <p id="importNotice" role="status"></p>
+  </dialog>
 
   <div class="ui boops" id="boops">BOOPS <b id="boopN">0</b></div>
 
@@ -694,6 +849,7 @@
       <div class="rec-menu__foot">录制中再点一次按钮可以提前结束</div>
     </div>
     <div class="dial" id="dial" role="group" aria-label="电台"></div>
+    <label class="volume">音量 <input id="volumeInput" type="range" min="0" max="1" step="0.05" value="0.65" aria-label="音量" /></label>
   </div>
 
   <div class="rec-frame"></div>
@@ -767,6 +923,7 @@
   </script>
 
   <script type="module">
+  import { SAVE_KEY, newState, parseState, beginSession, elapsed, checkpoint, pauseSession, resumeSession, recoverSession, finishSession } from './companion.mjs';
   import * as THREE from 'three';
   import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
   import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -892,6 +1049,8 @@
       this.anchor = 0;
       this.step = 0;
       this.timer = 0;
+      this.volume = 0.65;
+      this.muted = false;
     }
 
     get s16() { return 60 / STATIONS[this.station].music.bpm / 4; }
@@ -920,7 +1079,10 @@
       this.tone.connect(this.out);
       this.out.connect(comp);
       comp.connect(this.analyser);
-      this.analyser.connect(ctx.destination);
+      this.master = ctx.createGain();
+      this.master.gain.value = this.muted ? 0 : this.volume;
+      this.analyser.connect(this.master);
+      this.master.connect(ctx.destination);
 
       // 混响（程序生成的脉冲响应）
       this.rev = ctx.createConvolver();
@@ -1343,9 +1505,22 @@
       if (m.birds && i === 9 && hash(bar * 7.7) < 0.35) this.bird(t);
     }
 
+    setOutput(volume, muted) {
+      this.volume = volume;
+      this.muted = muted;
+      if (this.master) this.master.gain.setTargetAtTime(muted ? 0 : volume, this.ctx.currentTime, 0.03);
+    }
+
     tick() {
-      const ahead = this.ctx.currentTime + 0.14;
+      const now = this.ctx.currentTime;
+      const ahead = now + 0.14;
       let t = this.stepTime(this.step);
+      // Resume the current musical position instead of replaying a frozen tab's backlog.
+      if (t < now - 0.2) {
+        this.step = Math.max(this.step, Math.ceil((now - this.anchor) / this.s16));
+        this.events.length = 0;
+        t = this.stepTime(this.step);
+      }
       while (t < ahead) {
         this.playStep(this.step, t);
         this.step++;
@@ -1414,6 +1589,8 @@
   }
 
   const radio = new Radio();
+  let companion = null;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
   /* =========================================================
      渲染器 / 场景 / 相机
@@ -1918,6 +2095,7 @@
     frameCamera(false);
 
     ui.hide();
+    companion?.greet();
     applyLook(stationIndex, true);
     console.info(`[fox] 加载完成 · ${(performance.now() - loadStart).toFixed(0)} ms`);
   }
@@ -2452,7 +2630,7 @@
     const st = STATIONS[stationIndex];
     const mv = st.move;
     motion.amp += ((radio.playing ? 1 : 0) - motion.amp) * (1 - Math.exp(-dt * 3));
-    const A = motion.amp;
+    const A = motion.amp * (reducedMotion.matches ? 0.15 : companion?.isRunning ? 0.55 : 1);
     const b = radio.beat();
     const TAU = Math.PI * 2;
 
@@ -2555,6 +2733,16 @@
     };
 
     const ACTIONS = {
+      inviteHead: { dur: 4, f(u) {
+        const k = bump(u, 0.15, 0.8);
+        o.hr += 0.19 * k; o.hp -= 0.08 * k; o.happy = max(o.happy, 0.45 * k);
+        o.earL += 0.1 * k; o.earR += 0.1 * k;
+      } },
+      inviteNose: { dur: 4, f(u) {
+        const k = bump(u, 0.15, 0.8);
+        o.hp -= 0.17 * k; o.hy += 0.08 * k; o.happy = max(o.happy, 0.3 * k);
+        o.tailFast = max(o.tailFast, 0.3 * k);
+      } },
       blink:    { dur: 0.17, f(u) { const k = bump(u, 0.45, 0.55); o.closeL = max(o.closeL, k); o.closeR = max(o.closeR, k); } },
       squeeze:  { dur: 0.5,  f(u) { const k = bump(u, 0.15, 0.6); o.closeL = max(o.closeL, k); o.closeR = max(o.closeR, k); o.happy = max(o.happy, 0.6 * k); } },
       winkL:    { dur: 0.7,  sfx: 'wink', f(u) { const k = bump(u, 0.18, 0.7); o.closeL = max(o.closeL, k); o.closeR = max(o.closeR, 0.12 * k); o.happy = max(o.happy, 0.7 * k); o.hr += 0.12 * k; } },
@@ -2840,7 +3028,7 @@
       // 闲着的时候自己找点事做
       if (t > nextIdle) {
         nextIdle = t + (radio.playing ? 10 : 6) + Math.random() * 8;
-        if (!asleep && pet < 0.1 && !busy(t)) {
+        if (!asleep && pet < 0.1 && !busy(t) && !companion?.isRunning && !reducedMotion.matches) {
           const pool = ['blep', 'lick', 'earL', 'earR', 'winkR', 'blep', 'ears'];
           play(pool[Math.floor(Math.random() * pool.length)]);
         }
@@ -2852,6 +3040,14 @@
         if (u < 0) continue;
         if (u >= 1) { acts.splice(i, 1); continue; }
         A.f(u);
+      }
+
+      // An invitation remains visible until acknowledged, rather than disappearing after loading.
+      const invitation = companion?.greetingRitual;
+      if (invitation) {
+        o.hp -= invitation === 'nose' ? 0.12 : 0.05;
+        o.hr += invitation === 'head' ? 0.13 : 0;
+        o.happy = max(o.happy, 0.3);
       }
 
       // 摸头：眯眼、往手上蹭、尾巴猛摇、呼噜
@@ -2874,7 +3070,7 @@
       radio.purr(pet);
 
       // 睡觉：暂停状态下 25 秒没人理
-      if (!asleep && !radio.playing && !recorder.active && t - lastTouch > 25) asleep = true;
+      if (!asleep && !radio.playing && !recorder.active && !companion?.isRunning && !companion?.greetingRitual && t - lastTouch > 25) asleep = true;
       sleep += ((asleep ? 1 : 0) - sleep) * (1 - Math.exp(-dt * (asleep ? 0.7 : 7)));
       if (sleep > 0.01) {
         o.closeL = max(o.closeL, sleep); o.closeR = max(o.closeR, sleep);
@@ -3015,7 +3211,7 @@
   try { boops = parseInt(localStorage.getItem('foxkin.boops') || '0', 10) || 0; } catch (_) {}
   $('boopN').textContent = boops;
 
-  const MILESTONES = { 10: '🦊 狐狸开始记住你了', 25: '🎧 你们现在是朋友了', 50: '💕 狐狸：再点就收费了', 100: '🏆 Boop 大师', 250: '🫠 狐狸已经被你点化了' };
+  // Touch feedback is independent of relationship progress.
 
   const _heartVel = new THREE.Vector3();
   function doBoop(hitPoint) {
@@ -3037,7 +3233,7 @@
       const col = ['#ff4f7b', '#ff7aa2', '#ffd1dc', STATIONS[stationIndex].css][i % 4];
       fx.spawn(hitPoint, fx.heartTex, col, _heartVel, 1.4 + Math.random() * 0.6, 0.07 + Math.random() * 0.06 + (big ? 0.03 : 0));
     }
-    if (MILESTONES[boops]) toast(MILESTONES[boops]);
+
   }
 
   let toastTimer = 0;
@@ -3050,9 +3246,10 @@
   }
 
   function startIfIdle() {
-    if (!radio.playing) start();
+    if (!radio.playing && !companion?.quiet) start();
   }
   function start() {
+    if (companion?.quiet) return;
     face.touch(true);
     radio.start();
     document.body.classList.add('is-playing', 'has-started');
@@ -3063,7 +3260,7 @@
     if (radio.playing) {
       radio.stop();
       document.body.classList.remove('is-playing');
-    } else start();
+    } else { companion?.enableMusic(); start(); }
   }
 
   $('ctaBtn').addEventListener('click', start);
@@ -3111,6 +3308,7 @@
     }
 
     const zone = zoneOf(hit);
+    companion?.greetingTouch(zone);
     switch (zone) {
       case 'headphones': setStation(stationIndex + 1); startIfIdle(); break;
       case 'nose':  doBoop(hit.point); face.play('lickNose', true); discover('nose'); break;
@@ -3165,9 +3363,11 @@
   window.addEventListener('blur', () => { pointer.active = false; });
 
   window.addEventListener('keydown', (e) => {
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
-    face.keepAwake();
+    if (e.metaKey || e.ctrlKey || e.altKey || $('memoryDialog').open) return;
     if (recorder.open) { if (e.key === 'Escape') recorder.closeSheet(); return; }
+    if (e.key === 'Escape' && recorder.menuOpen) { recorder.closeMenu(); return; }
+    if (e.target.closest('input, textarea, select, button, a, [contenteditable]')) return;
+    face.keepAwake();
     if (e.key === 'r' || e.key === 'R') { recorder.active ? recorder.stop() : recorder.begin(); }
     else if (e.key === 'Escape' && recorder.menuOpen) recorder.closeMenu();
     else if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
@@ -3393,7 +3593,7 @@
       start();                               // 没在放就先开播，顺便确保 AudioContext 已创建
       if (!audioDest) {
         audioDest = radio.ctx.createMediaStreamDestination();
-        radio.analyser.connect(audioDest);
+        radio.master.connect(audioDest);
       }
 
       mime = pickMime();
@@ -3627,6 +3827,9 @@
   function onResize() {
     const w = window.innerWidth, h = window.innerHeight;
     camera.aspect = w / h;
+    // Reserve room below the fox for the companion card, so its face stays visible.
+    const sideCard = h <= 650 && w > 640;
+    camera.setViewOffset(w, h, sideCard ? Math.round(w * 0.12) : 0, sideCard ? 0 : Math.round(h * 0.15), w, h);
     camera.updateProjectionMatrix();
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(w, h, false);
@@ -3654,7 +3857,7 @@
 
     // 没人操作时，镜头左右缓缓晃，录屏有视差
     const idle = t - lastUserInput > 5;
-    controls.autoRotate = idle;
+    controls.autoRotate = idle && !companion?.isActive && !companion?.greetingRitual && !reducedMotion.matches;
     controls.autoRotateSpeed = Math.sin(t * 0.25) * 0.55;
 
     handleAudioEvents();
@@ -3671,7 +3874,14 @@
     renderer.render(scene, camera);
     recorder.frame(dt);
   }
-  renderer.setAnimationLoop(() => frameLoop());
+  let lastRender = 0;
+  renderer.setAnimationLoop(() => {
+    if (document.hidden) return;
+    const now = performance.now();
+    if (!recorder.active && (companion?.isActive || reducedMotion.matches) && now - lastRender < 1000 / 30) return;
+    lastRender = now;
+    frameLoop();
+  });
 
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
@@ -3688,6 +3898,272 @@
   }
   radio.station = stationIndex;
   setStation(stationIndex, true);
+
+  companion = (() => {
+    // ponytail: browser-local saves suit this sample; use durable sync before cross-device use.
+    let state = newState(), writeLocked = false, tabConflict = false;
+    // ponytail: suspension is inferred from gaps; add lifecycle signals if ordinary background use trips this.
+    const suspendGapMs = 120000;
+    let greeted = false, greetingPending = false, receipt = '', dueAnnounced = false;
+    let saveWarning = '';
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) state = parseState(raw);
+    } catch (error) {
+      writeLocked = true;
+      saveWarning = '暂时读不到原存档，原数据未被覆盖。你仍可体验；请先备份或恢复一份有效存档。';
+    }
+    recoverSession(state);
+    greetingPending = !!state.ritual;
+    radio.setOutput(state.volume, state.quiet);
+
+    const ritualName = (r) => r === 'head' ? '摸摸头' : '碰碰鼻子';
+    const durationText = (ms) => ms < 60000 ? '不到 1 分钟' : `${Math.floor(ms / 60000)} 分钟`;
+    const outcomeName = { done: '完成了', some: '做了一些', rest: '今天先这样', '': '' };
+    function stopMusic() {
+      radio.stop();
+      document.body.classList.remove('is-playing');
+    }
+    function save() {
+      if (writeLocked || tabConflict) return false;
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        saveWarning = '';
+        notice();
+        return true;
+      } catch (error) {
+        saveWarning = '这次还没能保存到浏览器。请在「共同经历」里下载备份，关闭页面前把经历留住。';
+        notice();
+        return false;
+      }
+    }
+    function notice() {
+      $('saveNotice').hidden = !saveWarning;
+      $('saveNotice').textContent = saveWarning;
+    }
+    function renderClock() {
+      const a = state.active;
+      if (!a) return;
+      const remaining = Math.max(0, a.plannedMs - elapsed(a));
+      const seconds = Math.ceil(remaining / 1000);
+      $('sessionClock').textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      const recovery = a.phase === 'recovery';
+      $('sessionHeading').textContent = recovery ? '上次的陪伴，接着来吗？' : a.phase === 'paused' ? '歇一会儿也很好。' : remaining ? '你做你的事，我在这里。' : '这段时间到了，慢慢收工。';
+      $('sessionCopy').textContent = recovery ? '只保留上次确认的时间，关闭或休眠期间没有计入。' : a.phase === 'paused' ? '暂停期间不会计时。想继续时，我还在。' : remaining ? a.intent || '可以去做自己的事，随时回来。' : '还想继续也可以，我等你回来打个招呼。';
+      $('pauseBtn').textContent = recovery ? '继续上次的陪伴' : a.phase === 'paused' ? '继续陪伴' : '暂停陪伴';
+      $('extendBtn').hidden = !!remaining || recovery || a.phase === 'closing';
+      if (!remaining && a.phase === 'running' && !dueAnnounced) {
+        dueAnnounced = true;
+        $('sessionAnnouncement').hidden = false;
+        $('sessionAnnouncement').textContent = '时间到了，可以收工，也可以继续陪伴。';
+        face.play(state.ritual === 'nose' ? 'inviteNose' : 'inviteHead');
+      }
+    }
+    function render() {
+      const a = state.active;
+      $('idlePanel').hidden = !!a;
+      $('activePanel').hidden = !a || a.phase === 'closing';
+      $('closingPanel').hidden = a?.phase !== 'closing';
+      $('foxName').value = state.name;
+      $('quietInput').checked = state.quiet;
+      $('volumeInput').value = state.volume;
+      $('greetBtn').hidden = !greetingPending || !!a;
+      $('greetBtn').textContent = state.ritual ? `${ritualName(state.ritual)}，打个招呼` : '打个招呼';
+      $('welcomeText').textContent = receipt ? '收工啦。谢谢你来。' : state.ritual ? (state.ritual === 'head' ? '它歪歪头，等你像上次那样摸摸。' : '它抬起鼻子，等你们熟悉的招呼。') : '我陪你一会儿。';
+      const latest = state.records.at(-1);
+      $('recentText').textContent = receipt || (latest ? `上次一起待了${durationText(latest.elapsedMs)}。今天从一点点开始也可以。` : '不用准备好所有事，先从一点点开始。');
+      $('closingCopy').textContent = state.ritual ? `还是我们的${ritualName(state.ritual)}？也可以换个招呼。` : '选个我们的收工招呼，下次我还记得。';
+      $('finishHead').className = state.ritual === 'nose' ? 'soft-btn' : 'primary-btn';
+      $('finishNose').className = state.ritual === 'nose' ? 'primary-btn' : 'soft-btn';
+      document.body.classList.toggle('is-accompanying', !!a);
+      if (a) renderClock();
+      notice();
+      for (const id of ['foxName', 'beginBtn', 'pauseBtn', 'extendBtn', 'endBtn', 'finishHead', 'finishNose', 'finishSkip', 'quietInput', 'volumeInput']) $(id).disabled = tabConflict;
+    }
+    function respond(ritual) {
+      face.touch(true);
+      if (ritual === 'head') {
+        face.petAt(0.38, 0.9);
+        face.play('smile', true);
+      } else if (ritual === 'nose' && model) {
+        doBoop(boxPoint(NOSE, new THREE.Vector3()).sub(rigOrigin).applyMatrix4(rig.matrixWorld));
+        face.play('lickNose', true);
+      } else face.play('smile', true);
+    }
+    function greet() {
+      if (!model || greeted || !greetingPending || state.active) return;
+      greeted = true;
+      lastUserInput = nowT;
+      face.touch(false);
+      face.play(state.ritual === 'head' ? 'inviteHead' : 'inviteNose');
+    }
+    function greetingTouch(zone) {
+      if (!greetingPending || state.active || zone !== state.ritual) return;
+      greetingPending = false;
+      $('welcomeText').textContent = '嗯，就是这个招呼。你来了。';
+      $('greetBtn').hidden = true;
+    }
+    $('greetBtn').addEventListener('click', () => {
+      respond(state.ritual);
+      greetingTouch(state.ritual);
+    });
+    $('beginForm').addEventListener('submit', (event) => {
+      event.preventDefault();
+      if (tabConflict) return;
+      const minutes = Number(new FormData(event.currentTarget).get('minutes'));
+      if (!beginSession(state, { minutes, intent: $('intentInput').value, station: STATIONS[stationIndex].name, id: crypto.randomUUID() })) return;
+      receipt = ''; greetingPending = false; dueAnnounced = false;
+      $('sessionAnnouncement').hidden = true;
+      document.body.classList.remove('is-exploring');
+      $('exploreBtn').setAttribute('aria-expanded', 'false');
+      if (!state.quiet) start(); else { stopMusic(); face.touch(true); }
+      save(); render(); $('pauseBtn').focus();
+    });
+    $('pauseBtn').addEventListener('click', () => {
+      if (!state.active || tabConflict) return;
+      if (state.active.phase === 'running') { pauseSession(state); stopMusic(); }
+      else { resumeSession(state); if (!state.quiet) start(); else face.touch(true); }
+      save(); render();
+    });
+    $('extendBtn').addEventListener('click', () => {
+      if (!state.active || tabConflict) return;
+      state.active.plannedMs = Math.max(state.active.plannedMs, elapsed(state.active)) + 600000;
+      dueAnnounced = false;
+      $('sessionAnnouncement').hidden = true;
+      save(); renderClock();
+    });
+    $('endBtn').addEventListener('click', () => {
+      if (!state.active || tabConflict) return;
+      pauseSession(state, 'closing'); stopMusic();
+      $('outcomeInput').value = '';
+      $('sessionAnnouncement').hidden = true;
+      face.touch(true);
+      face.play(state.ritual === 'nose' ? 'inviteNose' : 'inviteHead');
+      save(); render(); $(state.ritual === 'nose' ? 'finishNose' : 'finishHead').focus();
+    });
+    function finish(ritual) {
+      if (tabConflict) return;
+      const record = finishSession(state, ritual, $('outcomeInput').value);
+      if (!record) return;
+      const persisted = save();
+      receipt = `今天一起待了${durationText(record.elapsedMs)}。${persisted ? '这段经历已经留下了。' : '这段经历暂留在本页，请下载备份。'}`;
+      if (ritual) respond(ritual); else face.play('smile');
+      $('intentInput').value = '';
+      render(); $('beginBtn').focus();
+    }
+    $('finishHead').addEventListener('click', () => finish('head'));
+    $('finishNose').addEventListener('click', () => finish('nose'));
+    $('finishSkip').addEventListener('click', () => finish(null));
+    $('foxName').addEventListener('change', (event) => {
+      state.name = event.target.value.trim() || state.name;
+      event.target.value = state.name;
+      save();
+    });
+    function enableMusic() {
+      if (!state.quiet) return;
+      state.quiet = false;
+      $('quietInput').checked = false;
+      radio.setOutput(state.volume, false);
+      save();
+    }
+    $('quietInput').addEventListener('change', (event) => {
+      state.quiet = event.target.checked;
+      radio.setOutput(state.volume, state.quiet);
+      if (state.quiet) stopMusic(); else if (state.active?.phase === 'running') start();
+      save();
+    });
+    $('volumeInput').addEventListener('input', (event) => {
+      state.volume = Number(event.target.value);
+      radio.setOutput(state.volume, state.quiet);
+    });
+    $('volumeInput').addEventListener('change', save);
+    $('exploreBtn').addEventListener('click', () => {
+      const open = document.body.classList.toggle('is-exploring');
+      $('exploreBtn').setAttribute('aria-expanded', String(open));
+    });
+    function renderMemory() {
+      $('habitText').textContent = state.ritual ? `我们的招呼：${ritualName(state.ritual)}。下次见面，我也会这样等你。` : '我们的招呼还没定下来，慢慢来。';
+      const list = $('memoryList');
+      list.replaceChildren();
+      for (const r of state.records.slice(-20).reverse()) {
+        const li = document.createElement('li'), detail = document.createElement('small'), intent = document.createElement('strong');
+        const day = new Date(r.endedAt).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+        li.append(`${day} · 一起待了${durationText(r.elapsedMs)}`);
+        intent.textContent = r.intent || '一起待了一会儿';
+        detail.textContent = [r.station, outcomeName[r.outcome], r.ritual ? ritualName(r.ritual) : '安静收工'].filter(Boolean).join(' · ');
+        li.append(intent, detail); list.append(li);
+      }
+      if (!state.records.length) { const li = document.createElement('li'); li.textContent = '第一次收工后，我们会在这里留下一段经历。'; list.append(li); }
+      $('recordCount').textContent = state.records.length > 20 ? `显示最近 20 条，共 ${state.records.length} 条。备份包含全部经历。` : '';
+    }
+    $('memoryBtn').addEventListener('click', () => { renderMemory(); $('importNotice').textContent = ''; $('memoryDialog').showModal(); });
+    $('memoryClose').addEventListener('click', () => $('memoryDialog').close());
+    $('exportBtn').addEventListener('click', () => {
+      if (state.active && !tabConflict) snapshot();
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = `foxkin-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+    });
+    $('importBtn').addEventListener('click', () => $('importFile').click());
+    $('importFile').addEventListener('change', async (event) => {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      try {
+        if (file.size > 5 * 1024 * 1024) throw new Error('备份超过 5 MB，请确认选择的是狐伴存档。');
+        const restored = parseState(await file.text());
+        recoverSession(restored);
+        if (!confirm('恢复会替换当前名字、习惯和经历。建议先下载当前备份，确定继续吗？')) return;
+        // Write first: a quota/permission failure leaves the current state untouched.
+        localStorage.setItem(SAVE_KEY, JSON.stringify(restored));
+        state = restored; writeLocked = tabConflict = false; saveWarning = ''; receipt = '';
+        greeted = false; greetingPending = !!state.ritual; dueAnnounced = false;
+        stopMusic(); radio.setOutput(state.volume, state.quiet);
+        render(); renderMemory(); greet();
+        $('importNotice').textContent = '备份已恢复。';
+      } catch (error) { $('importNotice').textContent = error.message || '恢复失败，原存档未被替换。'; }
+    });
+    function pulse() {
+      const a = state.active;
+      if (!a || tabConflict) return;
+      if (a.phase === 'running' && Date.now() - a.lastSeenAt > suspendGapMs) {
+        recoverSession(state); stopMusic(); save(); render(); return;
+      }
+      if (a.phase === 'running') { checkpoint(state); save(); }
+      renderClock();
+    }
+    setInterval(renderClock, 1000);
+    setInterval(pulse, 15000);
+    function snapshot() {
+      if (!state.active || tabConflict) return;
+      if (state.active.phase === 'running' && Date.now() - state.active.lastSeenAt > suspendGapMs) {
+        recoverSession(state); stopMusic();
+      }
+      checkpoint(state); save();
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) snapshot(); else pulse();
+    });
+    window.addEventListener('pagehide', snapshot);
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) { recoverSession(state); stopMusic(); save(); render(); }
+    });
+    window.addEventListener('storage', (event) => {
+      if (event.key !== SAVE_KEY && event.key !== null) return;
+      tabConflict = true;
+      recoverSession(state); stopMusic();
+      saveWarning = '另一个页面更新了经历，本页已暂停。请刷新以查看最新存档；本页尚未保存的经历可以先下载备份。';
+      render();
+    });
+    render();
+    return { greet, greetingTouch, enableMusic,
+      get quiet() { return state.quiet; },
+      get greetingRitual() { return greetingPending && !state.active ? state.ritual : null; },
+      get isActive() { return !!state.active; },
+      get isRunning() { return state.active?.phase === 'running'; }
+    };
+  })();
 
   window.__fox = {
     THREE, scene, camera, renderer, controls, radio, motion, deformUniforms, rig,
