@@ -2159,7 +2159,7 @@
     frameCamera(false);
 
     ui.hide();
-    companion?.greet();
+    if (reducedMotion.matches) companion?.greet();
     applyLook(stationIndex, true);
     console.info(`[fox] 加载完成 · ${(performance.now() - loadStart).toFixed(0)} ms`);
   }
@@ -4217,6 +4217,9 @@
       if (state.pendingEvent === 'sound') chooseEvent(state, event.target.value);
       else state.closingSound = event.target.value;
       save(); render(); renderMemory();
+    });
+    $('overlay').addEventListener('transitionend', (event) => {
+      if (event.target === $('overlay') && event.propertyName === 'opacity' && $('overlay').classList.contains('is-hidden')) greet();
     });
     $('memoryDialog').addEventListener('close', greet);
     $('memoryBtn').addEventListener('click', () => { renderMemory(); $('importNotice').textContent = ''; $('memoryDialog').showModal(); });
