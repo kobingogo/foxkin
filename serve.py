@@ -17,10 +17,13 @@ class Handler(SimpleHTTPRequestHandler):
     def proxy(self):
         if not api:
             self.send_error(503,'Configure --api to use cloud sync');return
-        length=int(self.headers.get('Content-Length','0'))
+        try:length=int(self.headers.get('Content-Length','0'))
+        except ValueError:
+            self.send_error(400);return
         if length<0 or length>1050000:
             self.send_error(413);return
-        headers={'Authorization':self.headers.get('Authorization',''),'Content-Type':'application/json','Origin':api}
+        headers={'Authorization':self.headers.get('Authorization',''),'Content-Type':'application/json','Origin':api,
+                 'User-Agent':self.headers.get('User-Agent','Foxkin-Local-Preview/0.2')}
         request=Request(api+self.path,data=self.rfile.read(length) if length else None,headers=headers,method=self.command)
         try:
             response=urlopen(request,timeout=20)

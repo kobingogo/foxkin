@@ -51,7 +51,7 @@ npx wrangler pages dev dist --ip 127.0.0.1 --port 8788
 
 ## 部署
 
-Cloudflare Pages 从本仓库的 `main` 自动构建，构建命令 `npm ci && npm run build`，输出 `dist`。同步 API 使用 Pages Functions 与 D1 的 `DB` 绑定，表定义在 `schema.sql`，配置在 `wrangler.jsonc`。
+Cloudflare Pages 从本仓库的 `main` 自动构建，构建命令 `npm ci && npm test && npm run build`，输出 `dist`。同步 API 使用 Pages Functions 与 D1 的 `DB` 绑定，表定义在 `schema.sql`，配置在 `wrangler.jsonc`。
 
 首次部署到自己的账号时，创建 D1 数据库并替换配置中的 ID，再运行：
 

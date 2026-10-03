@@ -35,7 +35,8 @@ export function createSync({read,apply,status,conflict,storage=localStorage,fetc
   async function request(method,body,configOverride=config) {
     const {id,token}=await credentials(configOverride.code);
     const response=await fetcher('/api/sync/'+id,{method,headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:AbortSignal.timeout(15000)});
-    const data=await response.json();
+    let data;
+    try {data=await response.json();} catch {throw new Error('同步服务暂时没有响应，请稍后再试；本机经历仍保留。');}
     if(!response.ok) { const error=new Error(data.error || '同步暂时不可用。'); error.status=response.status; throw error; }
     return data;
   }

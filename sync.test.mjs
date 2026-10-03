@@ -52,3 +52,6 @@ if(process.env.TEST_SYNC_ORIGIN) {
   assert.equal((await fetch(url,{headers})).status,404);
   console.log('PASS: live API auth, origin, atomic concurrent writes, malformed payload and deletion');
 }
+const offlineStore=new Map(), unavailable=createSync({read:()=>newState(),apply:()=>{},status:s=>notice=s,conflict:()=>{},storage:{getItem:k=>offlineStore.get(k)||null,setItem:(k,v)=>offlineStore.set(k,v),removeItem:k=>offlineStore.delete(k)},fetcher:async()=>new Response('temporarily unavailable',{status:503})});
+await unavailable.create();assert.match(notice,/本机经历仍保留/);assert.equal(unavailable.enabled,true,'retry credentials survive an interrupted creation');
+console.log('PASS: non-JSON service failure keeps local memories and retry credentials');
