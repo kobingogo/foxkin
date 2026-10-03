@@ -29,7 +29,7 @@ export function mergeForSync(local,remote,base,choice) {
 }
 export function createSync({read,apply,status,conflict,storage=localStorage,fetcher=fetch}) {
   const configKey='foxkin.sync.v1';
-  let config=null,busy=false,timer,deleted=false;
+  let config=null,busy=false,timer,deleted=false,again=false;
   try {config=JSON.parse(storage.getItem(configKey)); if(config) {validateCode(config.code); if(typeof config.base!=='string') config.base='';}} catch {config=null;}
   function persist() {storage.setItem(configKey,JSON.stringify(config));}
   async function request(method,body,configOverride=config) {
@@ -41,7 +41,8 @@ export function createSync({read,apply,status,conflict,storage=localStorage,fetc
     return data;
   }
   async function run(choice) {
-    if(!config || busy || deleted) return;
+    if(!config || deleted) return;
+    if(busy) {again=true;return;}
     busy=true;status('正在同步…');
     try {
       let remote;
@@ -69,7 +70,7 @@ export function createSync({read,apply,status,conflict,storage=localStorage,fetc
     } catch(error) {
       status(error.status===409 ? '另一台设备正在更新，将自动重试；本机经历仍保留。' : navigator.onLine===false ? '离线中，本机已保存；联网后自动同步。' : error.message);
       if(error.status===409) timer=setTimeout(()=>run(),1500);
-    } finally {busy=false;}
+    } finally {busy=false;if(again){again=false;changed();}}
   }
   function changed() {if(!config || deleted)return;clearTimeout(timer);timer=setTimeout(()=>run(),1200);}
   return {
@@ -81,10 +82,10 @@ export function createSync({read,apply,status,conflict,storage=localStorage,fetc
       const next={code:makeCode(),base:habits(read()),revision:0,creating:true};
       // Persist credentials before upload, so even a reload during creation cannot orphan a backup.
       config=next;try {persist();const result=await request('PUT',{revision:0,cipher:await encrypt(cloudState(read()),next.code)});config.creating=false;config.revision=result.revision;persist();status('自动备份已开启，请保管私密同步码。');}
-      catch(error) {status(error.message+' 同步码已保留，可稍后重试。');}finally{busy=false;}
+      catch(error) {status(error.message+' 同步码已保留，可稍后重试。');}finally{busy=false;if(again){again=false;changed();}}
     },
     async join(code){validateCode(code);if(busy)throw new Error('请等当前同步完成。');const next={code,base:'',revision:0};const remote=await request('GET',null,next);await decrypt(remote.cipher,code);deleted=false;config=next;persist();await run();},
     disconnect(){if(busy)throw new Error('请等当前同步完成。');clearTimeout(timer);config=null;storage.removeItem(configKey);status('已断开。本机经历和云端备份仍保留。');},
-    async remove(){if(!config || busy)return;busy=true;try{await request('DELETE');deleted=true;clearTimeout(timer);config=null;storage.removeItem(configKey);status('云端备份已删除。本机经历仍保留。');}finally{busy=false;}}
+    async remove(){if(!config)return;if(busy)throw new Error('请等当前同步完成，再删除云端备份。');busy=true;try{await request('DELETE');deleted=true;clearTimeout(timer);config=null;storage.removeItem(configKey);status('云端备份已删除。本机经历仍保留。');}finally{busy=false;}}
   };
 }

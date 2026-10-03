@@ -55,3 +55,14 @@ if(process.env.TEST_SYNC_ORIGIN) {
 const offlineStore=new Map(), unavailable=createSync({read:()=>newState(),apply:()=>{},status:s=>notice=s,conflict:()=>{},storage:{getItem:k=>offlineStore.get(k)||null,setItem:(k,v)=>offlineStore.set(k,v),removeItem:k=>offlineStore.delete(k)},fetcher:async()=>new Response('temporarily unavailable',{status:503})});
 await unavailable.create();assert.match(notice,/本机经历仍保留/);assert.equal(unavailable.enabled,true,'retry credentials survive an interrupted creation');
 console.log('PASS: non-JSON service failure keeps local memories and retry credentials');
+const queueStore=new Map();let getCount=0,releaseRead;
+const queued=createSync({read:()=>newState(),apply:()=>{},status:()=>{},conflict:()=>{},storage:{getItem:k=>queueStore.get(k)||null,setItem:(k,v)=>queueStore.set(k,v),removeItem:k=>queueStore.delete(k)},fetcher:async(_url,options)=>{
+  if(options.method==='PUT'){server={cipher:JSON.parse(options.body).cipher,revision:1};return Response.json({revision:1});}
+  getCount++;if(getCount===1)await new Promise(resolve=>releaseRead=resolve);
+  return Response.json(server);
+}});
+await queued.create();const firstRead=queued.run();
+while(!releaseRead)await new Promise(resolve=>setTimeout(resolve,10));
+await queued.run();releaseRead();await firstRead;
+await new Promise(resolve=>setTimeout(resolve,1500));assert.equal(getCount,2,'a manual sync during an in-flight request is queued, not lost');
+console.log('PASS: concurrent manual sync is retried after the current request');
