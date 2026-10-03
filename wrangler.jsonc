@@ -1,0 +1,4 @@
+{
+  "name": "foxkin", "pages_build_output_dir": "./dist", "compatibility_date": "2026-10-03",
+  "d1_databases": [{ "binding": "DB", "database_name": "foxkin-sync", "database_id": "a5e1ca09-dd1d-4fea-9820-c568f15a7ced" }]
+}

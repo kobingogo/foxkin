@@ -1,0 +1,10 @@
+{
+  "id": "/", "name": "狐伴 · Foxkin", "short_name": "狐伴",
+  "description": "一只会记住共同习惯的狐狸，陪你开始与收工。",
+  "start_url": "/", "scope": "/", "display": "standalone", "lang": "zh-CN",
+  "background_color": "#101830", "theme_color": "#101830",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -70,8 +70,10 @@ export function parseState(raw) {
     const closingSound = s.version === 1 ? 'off' : r.closingSound;
     if (!validDay(day) || !SOUNDS.includes(closingSound)) throw new Error('经历中的日期或声音格式有误。');
     return { id: r.id, startedAt: r.startedAt, endedAt: r.endedAt, elapsedMs: r.elapsedMs,
-      intent: r.intent, station: r.station, outcome: r.outcome, ritual: r.ritual, day, closingSound };
+      intent: r.intent, station: r.station, outcome: r.outcome, ritual: r.ritual, day, closingSound,
+      kind: r.kind === undefined ? 'session' : r.kind };
   });
+  if (records.some(r => !['session', 'visit'].includes(r.kind))) throw new Error('经历类型有误。');
   const ids = new Set(records.map((r) => r.id));
   if (ids.size !== records.length) throw new Error('存档包含重复的经历。');
   let active = null;
@@ -86,7 +88,9 @@ export function parseState(raw) {
     }
     active = { id: a.id, startedAt: a.startedAt, lastSeenAt: a.lastSeenAt,
       elapsedMs: a.elapsedMs, plannedMs: a.plannedMs, runningSince: a.runningSince,
-      phase: a.phase, intent: a.intent, station: a.station };
+      phase: a.phase, intent: a.intent, station: a.station,
+      kind: a.kind === undefined ? 'session' : a.kind };
+    if (!['session', 'visit'].includes(active.kind)) throw new Error('陪伴类型有误。');
   }
   let greeting = 'familiar', closingSound = 'off', pendingEvent = null;
   let events = { welcome: false, sound: false, lastDay: null };
@@ -114,12 +118,13 @@ export function elapsed(session, now = Date.now()) {
 
 export function beginSession(state, { minutes, intent = '', station, id, now = Date.now() }) {
   if (state.active) return false;
-  if (![10, 25, 45].includes(minutes) || !text(intent, 100) || !text(station, 40) ||
+  if (![1, 10, 25, 45].includes(minutes) || !text(intent, 100) || !text(station, 40) ||
       !text(id, 80) || !id || state.records.some((r) => r.id === id) || !date(now)) {
     throw new Error('无法开始这段陪伴。');
   }
   state.active = { id, startedAt: now, lastSeenAt: now, elapsedMs: 0,
-    plannedMs: minutes * 60000, runningSince: now, phase: 'running', intent: intent.trim(), station };
+    plannedMs: minutes * 60000, runningSince: now, phase: 'running', intent: intent.trim(), station,
+    kind: minutes === 1 ? 'visit' : 'session' };
   return true;
 }
 
@@ -164,10 +169,36 @@ export function finishSession(state, ritual, outcome = '', now = Date.now()) {
   const record = { id: a.id, startedAt: a.startedAt, endedAt: Math.max(now, a.lastSeenAt),
     elapsedMs: elapsed(a, now), intent: a.intent, station: a.station, outcome, ritual,
     day: localDay(Math.max(now, a.lastSeenAt)),
-    closingSound: ritual && !state.quiet && state.volume > 0 ? state.closingSound : 'off' };
+    closingSound: ritual && !state.quiet && state.volume > 0 ? state.closingSound : 'off', kind: a.kind || 'session' };
   if (!state.records.some((r) => r.id === a.id)) state.records.push(record);
   if (ritual) state.ritual = ritual;
   state.active = null;
   offerEvent(state, record.day);
   return record;
+}
+
+export function reunion(state, now = Date.now()) {
+  const last = state.records.at(-1);
+  return !last ? 'first' : now - last.endedAt >= 7 * 86400000 ? 'long' : 'return';
+}
+
+export const habitKeys = ['name', 'ritual', 'greeting', 'closingSound'];
+export const habits = state => JSON.stringify(habitKeys.map(key => state[key]));
+
+// Sessions stay on their own device. Confirmed records merge by ID without erasing either history.
+export function mergeMemories(local, remote, preference = 'remote') {
+  const records = new Map(local.records.map(r => [r.id, r]));
+  for (const r of remote.records) {
+    const existing = records.get(r.id);
+    if (existing && JSON.stringify(existing) !== JSON.stringify(r)) throw new Error('同一段经历出现不同版本，请先下载两端备份。');
+    records.set(r.id, r);
+  }
+  const result = { ...local, records: [...records.values()].sort((a, b) => a.endedAt - b.endedAt || a.id.localeCompare(b.id)),
+    events: { welcome: local.events.welcome || remote.events.welcome,
+      sound: local.events.sound || remote.events.sound,
+      lastDay: [local.events.lastDay, remote.events.lastDay].filter(Boolean).sort().at(-1) || null } };
+  if (preference === 'remote') for (const key of habitKeys) result[key] = remote[key];
+  const pending = [local.pendingEvent, remote.pendingEvent].find(kind => kind && !result.events[kind]);
+  result.pendingEvent = pending || null;
+  return parseState(JSON.stringify(result));
 }

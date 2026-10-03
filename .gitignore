@@ -9,3 +9,7 @@ dist/
 
 .playwright-cli/
 output/
+vendor/
+offline-assets.js
+FOX-FM-技术复盘.md
+index.v1.html

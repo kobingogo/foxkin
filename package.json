@@ -1,0 +1,14 @@
+{
+  "name": "foxkin",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "一只会记住共同习惯的狐狸，陪你开始与收工。",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node companion.test.mjs && node sync.test.mjs",
+    "dev": "npm run build && npx wrangler pages dev dist",
+    "deploy": "npm run build && npx wrangler pages deploy dist --project-name foxkin --branch main"
+  },
+  "dependencies": { "three": "0.186.1" }
+}

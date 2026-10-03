@@ -8,9 +8,9 @@
 <meta property="og:title" content="FOXKIN 🦊🎧" />
 <meta property="og:description" content="狐伴 · Foxkin：陪伴产品的起点，包含 3D 狐狸、音乐和触摸互动。" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<meta name="theme-color" content="#101830" />
+<link rel="apple-touch-icon" href="/icon-192.png" />
 
 <style>
   :root{
@@ -694,6 +694,8 @@
   .memory-list li{ padding: 13px 0; border-top: 1px solid #e3e7ee; font-size: 13px; line-height: 1.65; }
   .memory-list small{ display: block; color: #667085; }
   .memory-list strong{ display: block; font-weight: 550; overflow-wrap: anywhere; }
+  .memory-dialog input.intent{ color:#202638; background:#eef1f6; border:1px solid #ccd2df; margin:8px 0; }
+  body.is-compact #stationText, body.is-compact .poster__brand, body.is-compact .comp-nav #exploreBtn{display:none;}
   #importNotice{ color: #9d3740; }
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{ animation: none !important; transition: none !important; }
@@ -720,8 +722,8 @@
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    "three": "./vendor/three/build/three.module.js",
+    "three/addons/": "./vendor/three/examples/jsm/"
   }
 }
 </script>
@@ -766,6 +768,7 @@
         <input class="intent" id="intentInput" aria-label="这会儿想做什么（可不填）" placeholder="这会儿想做什么？也可以不填" maxlength="100" autocomplete="off" />
         <button class="primary-btn wide" id="beginBtn" type="submit">陪我一会儿</button>
       </form>
+      <button class="soft-btn" id="visitBtn" type="button">只是来看看 · 1 分钟</button>
     </div>
     <div id="activePanel" hidden>
       <h1 id="sessionHeading">你做你的事，我在这里。</h1>
@@ -840,6 +843,24 @@
       <button class="soft-btn" id="previewSound" type="button">试听收工旋律</button>
       <p class="sound-note">习惯随时可改。安静陪伴或音量为零时，旋律不会播放。</p>
     </details>
+    <details class="habit-settings" id="platformSettings">
+      <summary>入口与运行</summary>
+      <div class="comp-row"><button class="soft-btn" id="installBtn" type="button">安装狐伴</button><button class="soft-btn" id="updateBtn" type="button" hidden>更新版本</button></div>
+      <div class="comp-row"><button class="soft-btn" id="windowBtn" type="button">独立小窗</button><button class="soft-btn" id="pipBtn" type="button">悬浮陪伴</button></div>
+      <p class="sound-note" id="pipSupport"></p>
+      <label>画面与功耗<select id="performanceSetting"><option value="auto">自动 · 安静时省电</option><option value="economy">省电 · 少量粒子与较低清晰度</option><option value="full">流畅 · 较高清晰度</option></select></label>
+      <p class="sound-note" id="platformStatus" role="status">正在准备离线资源…</p>
+    </details>
+    <details class="habit-settings" id="syncSettings">
+      <summary>自动备份与跨设备</summary>
+      <p class="sound-note">开启后，名字、习惯和共同经历会加密备份到云端。正在进行的陪伴和音量留在本机。同步码是解密钥匙，请私下保管；丢失后无法找回。</p>
+      <button class="soft-btn" id="syncCreate" type="button">开启自动备份</button>
+      <label>私密同步码<input class="intent" id="syncCode" type="password" autocomplete="off" spellcheck="false" maxlength="100" placeholder="在另一台设备输入同步码" /></label>
+      <div class="comp-row"><button class="soft-btn" id="syncJoin" type="button">连接已有存档</button><button class="soft-btn" id="syncReveal" type="button">显示／隐藏同步码</button></div>
+      <div class="comp-row"><button class="soft-btn" id="syncNow" type="button">立即同步</button><button class="soft-btn" id="syncDisconnect" type="button">断开本机</button><button class="soft-btn" id="syncDelete" type="button">删除云端备份</button></div>
+      <div id="syncConflict" hidden><p>两端的名字或习惯都变过。经历会合并，习惯保留哪一端？</p><div class="comp-row"><button class="soft-btn" id="syncLocal" type="button">保留本机习惯</button><button class="soft-btn" id="syncRemote" type="button">采用云端习惯</button></div></div>
+      <p class="sound-note" id="syncStatus" role="status">尚未开启。现在只保存在本机。</p>
+    </details>
     <ul class="memory-list" id="memoryList"></ul>
     <p id="recordCount"></p>
     <p>名字和经历保存在当前浏览器。换设备或清理浏览器前，可以留一份备份。</p>
@@ -848,6 +869,7 @@
       <button class="soft-btn" id="importBtn" type="button">恢复备份</button>
       <input type="file" id="importFile" accept="application/json,.json" hidden />
     </div>
+    <details class="habit-settings"><summary>本机自动备份</summary><p class="sound-note">每次经历或习惯变化时保留最近三份快照。清理浏览器会同时清除这些备份。</p><select id="backupSelect" aria-label="自动备份时间"></select><button class="soft-btn" id="restoreAuto" type="button">恢复选中的快照</button></details>
     <p id="importNotice" role="status"></p>
   </dialog>
 
@@ -928,7 +950,7 @@
         <ol>
           <li>确认 <code>fox-web.glb</code> 与本 HTML 文件在<b>同一目录</b>下。</li>
           <li>请通过 <code>http://</code> 访问本页（本地起个静态服务器），直接双击用 <code>file://</code> 打开会被浏览器拦截。</li>
-          <li>若模型已就位仍失败，请检查网络是否能访问 <code>cdn.jsdelivr.net</code>。</li>
+          <li>本地运行请先执行 <code>npm run build</code>；线上请联网后重新打开，等待离线资源准备完成。</li>
         </ol>
       </div>
     </div>
@@ -961,7 +983,7 @@
       if (!booted) {
         window.__foxUI.fail(
           '脚本加载超时',
-          '无法从 cdn.jsdelivr.net 加载 three.js 模块。\n请检查网络连接，或确认页面可访问外网 CDN。'
+          '页面资源没有加载完整。\n本地运行请先 npm run build，线上请联网后重新打开。'
         );
       }
     }, 20000);
@@ -969,7 +991,9 @@
   </script>
 
   <script type="module">
-  import { SAVE_KEY, newState, parseState, beginSession, elapsed, checkpoint, pauseSession, resumeSession, recoverSession, finishSession, togetherDays, chooseEvent } from './companion.mjs';
+  import { SAVE_KEY, newState, parseState, beginSession, elapsed, checkpoint, pauseSession, resumeSession, recoverSession, finishSession, togetherDays, chooseEvent, reunion, habits } from './companion.mjs';
+  import { createSync, normalizeCode } from './sync.mjs';
+  import { setupPlatform } from './platform.mjs';
   import * as THREE from 'three';
   import { GLTFLoader }  from 'three/addons/loaders/GLTFLoader.js';
   import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
@@ -984,7 +1008,7 @@
      ========================================================= */
   const MODEL_URL  = 'fox-web.glb';
   const THREE_VER  = '0.186.1';
-  const DRACO_PATH = `https://cdn.jsdelivr.net/npm/three@${THREE_VER}/examples/jsm/libs/draco/gltf/`;
+  const DRACO_PATH = './vendor/three/examples/jsm/libs/draco/gltf/';
 
   /**
    * 三个电台 = 三种耳机颜色。
@@ -2542,6 +2566,7 @@
 
     return {
       pmat, noteTex, heartTex, zTex, spawn, ring, update,
+      economy(on) { pgeo.setDrawRange(0, on ? 45 : N); },
       place(center, radius) {
         group.position.set(center.x, 0, center.z);
         ringBase = radius * 0.9;
@@ -3904,7 +3929,7 @@
     const sideCard = h <= 650 && w > 640;
     camera.setViewOffset(w, h, sideCard ? Math.round(w * 0.12) : 0, sideCard ? 0 : Math.round(h * 0.15), w, h);
     camera.updateProjectionMatrix();
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, companion?.lowPower ? 1 : 2));
     renderer.setSize(w, h, false);
     fx.pmat.uniforms.uPR.value = renderer.getPixelRatio() * h / 900;
     if (model) frameCamera(true);
@@ -3948,13 +3973,21 @@
     recorder.frame(dt);
   }
   let lastRender = 0;
-  renderer.setAnimationLoop(() => {
-    if (document.hidden) return;
+  const animateFrame = () => {
+    if (document.hidden && !companion?.floating) return;
     const now = performance.now();
-    if (!recorder.active && (companion?.isActive || reducedMotion.matches) && now - lastRender < 1000 / 30) return;
+    const interacting = nowT - lastUserInput < 2 || pointer.active;
+    const fps = companion?.lowPower && !interacting ? 20 : companion?.isActive || reducedMotion.matches ? 30 : 60;
+    if (!recorder.active && now - lastRender < 1000 / fps) return;
+    if (!recorder.active) {
+      const ratio = Math.min(window.devicePixelRatio || 1, companion?.lowPower && !interacting ? 1 : 2);
+      if (renderer.getPixelRatio() !== ratio) {renderer.setPixelRatio(ratio);fx.pmat.uniforms.uPR.value=ratio*window.innerHeight/900;}
+      fx.economy(companion?.lowPower && !interacting);
+    }
     lastRender = now;
     frameLoop();
-  });
+  };
+  renderer.setAnimationLoop(animateFrame);
 
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault();
@@ -3973,12 +4006,16 @@
   setStation(stationIndex, true);
 
   companion = (() => {
-    // ponytail: browser-local saves suit this sample; use durable sync before cross-device use.
     let state = newState(), writeLocked = false, tabConflict = false;
     // ponytail: suspension is inferred from gaps; add lifecycle signals if ordinary background use trips this.
     const suspendGapMs = 120000;
     let greeted = false, greetingPending = false, receipt = '', dueAnnounced = false;
-    let saveWarning = '', migrateOnLoad = false;
+    let saveWarning = '', migrateOnLoad = false, sync = null, platform = null, applyingSync = false;
+    let performanceMode = 'auto', backupFingerprint = '';
+    try { performanceMode = localStorage.getItem('foxkin.performance') || 'auto'; } catch {}
+    if (!['auto','economy','full'].includes(performanceMode)) performanceMode = 'auto';
+    $('performanceSetting').value = performanceMode;
+    document.body.classList.toggle('is-compact', new URLSearchParams(location.search).has('compact'));
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (raw) { state = parseState(raw); migrateOnLoad = JSON.parse(raw).version === 1; }
@@ -3989,6 +4026,7 @@
     recoverSession(state);
     greetingPending = !!state.ritual || state.greeting !== 'familiar';
     radio.setOutput(state.volume, state.quiet);
+    const welcomeKind = reunion(state);
 
     const greetingName = (g) => ({ familiar: '熟悉的招呼', wink: '眨眨眼', smile: '笑一下' }[g]);
     const ritualName = (r) => r === 'head' ? '摸摸头' : '碰碰鼻子';
@@ -4002,6 +4040,8 @@
       if (writeLocked || tabConflict) return false;
       try {
         localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        saveLocalBackup();
+        if (!applyingSync) sync?.changed();
         saveWarning = '';
         notice();
         return true;
@@ -4011,6 +4051,37 @@
         return false;
       }
     }
+    const backupKey = 'foxkin.backups.v1';
+    function backups() { try { const data=JSON.parse(localStorage.getItem(backupKey) || '[]'); return Array.isArray(data) ? data.slice(-3) : []; } catch { return []; } }
+    function saveLocalBackup() {
+      const fingerprint=habits(state)+JSON.stringify(state.records.map(r=>r.id))+JSON.stringify(state.events);
+      if (!state.records.length || fingerprint===backupFingerprint) return;
+      const list=backups(); list.push({at:Date.now(),state:JSON.stringify(state)});
+      try {localStorage.setItem(backupKey,JSON.stringify(list.slice(-3)));backupFingerprint=fingerprint;}
+      catch { $('importNotice').textContent='当前存档已保存，但自动快照空间不足；请下载备份。'; }
+    }
+    function renderBackups() {
+      const select=$('backupSelect');select.replaceChildren();
+      backups().forEach((item,index)=>{const option=document.createElement('option');option.value=index;option.textContent=new Date(item.at).toLocaleString();select.append(option);});
+      $('restoreAuto').disabled=!select.children.length || tabConflict;
+    }
+    function replaceLocal(restored) {
+      if(tabConflict) throw new Error('另一个页面更新了经历，请先刷新再恢复。');
+      recoverSession(restored);
+      // Keep the current save in a snapshot before any explicit restoration.
+      saveLocalBackup();
+      localStorage.setItem(SAVE_KEY,JSON.stringify(restored));
+      state=restored;writeLocked=false;saveWarning='';receipt='';greeted=false;dueAnnounced=false;
+      greetingPending=!!state.ritual || state.greeting!=='familiar';
+      stopMusic();radio.setOutput(state.volume,state.quiet);save();render();renderMemory();
+    }
+    $('restoreAuto').addEventListener('click',()=>{
+      try {const item=backups()[Number($('backupSelect').value)]; if(!item) return;
+        const restored=parseState(item.state);
+        if(!confirm('恢复这份快照会替换当前经历和习惯。当前云端连接会断开，云端备份仍保留。继续吗？')) return;
+        sync?.disconnect();replaceLocal(restored);renderSync();$('importNotice').textContent='自动快照已恢复。';
+      } catch(error) {$('importNotice').textContent=error.message;}
+    });
     function notice() {
       $('saveNotice').hidden = !saveWarning;
       $('saveNotice').textContent = saveWarning;
@@ -4023,6 +4094,7 @@
       $('sessionClock').textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
       const recovery = a.phase === 'recovery';
       $('sessionHeading').textContent = recovery ? '上次的陪伴，接着来吗？' : a.phase === 'paused' ? '歇一会儿也很好。' : remaining ? '你做你的事，我在这里。' : '这段时间到了，慢慢收工。';
+      $('endBtn').textContent = a.kind === 'visit' ? '结束探望' : '准备收工';
       $('sessionCopy').textContent = recovery ? '只保留上次确认的时间，关闭或休眠期间没有计入。' : a.phase === 'paused' ? '暂停期间不会计时。想继续时，我还在。' : remaining ? a.intent || '可以去做自己的事，随时回来。' : '还想继续也可以，我等你回来打个招呼。';
       $('pauseBtn').textContent = recovery ? '继续上次的陪伴' : a.phase === 'paused' ? '继续陪伴' : '暂停陪伴';
       $('extendBtn').hidden = !!remaining || recovery || a.phase === 'closing';
@@ -4050,7 +4122,9 @@
       $('volumeInput').value = state.volume;
       $('greetBtn').hidden = !greetingPending || !!a;
       $('greetBtn').textContent = state.greeting === 'familiar' ? `${ritualName(state.ritual)}，打个招呼` : state.greeting === 'wink' ? '回应它的眨眼' : '回应它的笑容';
-      $('welcomeText').textContent = receipt ? '收工啦。谢谢你来。' : state.greeting === 'wink' ? '它眨眨眼，把熟悉的招呼留给你。' : state.greeting === 'smile' ? '它眯眼笑了笑，欢迎你回来。' : state.ritual ? (state.ritual === 'head' ? '它歪歪头，等你像上次那样摸摸。' : '它抬起鼻子，等你们熟悉的招呼。') : '我陪你一会儿。';
+      const opening = welcomeKind === 'first' ? '你好，我是你的狐伴。' : welcomeKind === 'long' ? '好久不见，见到你真好。' : '你回来啦。';
+      const familiarCopy = state.greeting === 'wink' ? '它眨眨眼，把熟悉的招呼留给你。' : state.greeting === 'smile' ? '它眯眼笑了笑，欢迎你回来。' : state.ritual ? (state.ritual === 'head' ? '它歪歪头，等你像上次那样摸摸。' : '它抬起鼻子，等你们熟悉的招呼。') : '我陪你一会儿。';
+      $('welcomeText').textContent = receipt ? '谢谢你来。' : opening + familiarCopy;
       const latest = state.records.at(-1);
       $('recentText').textContent = receipt || (latest ? `上次一起待了${durationText(latest.elapsedMs)}。今天从一点点开始也可以。` : '不用准备好所有事，先从一点点开始。');
       $('closingCopy').textContent = state.ritual ? `还是我们的${ritualName(state.ritual)}？也可以换个招呼。` : '选个我们的收工招呼，下次我还记得。';
@@ -4059,7 +4133,7 @@
       document.body.classList.toggle('is-accompanying', !!a);
       if (a) renderClock();
       notice();
-      for (const id of ['foxName', 'beginBtn', 'pauseBtn', 'extendBtn', 'endBtn', 'finishHead', 'finishNose', 'finishSkip', 'quietInput', 'volumeInput', 'eventWink', 'eventSmile', 'eventFamiliar', 'eventKeepSound', 'eventNoSound', 'greetingSetting', 'ritualSetting', 'soundSetting']) $(id).disabled = tabConflict;
+      for (const id of ['foxName', 'beginBtn', 'visitBtn', 'pauseBtn', 'extendBtn', 'endBtn', 'finishHead', 'finishNose', 'finishSkip', 'quietInput', 'volumeInput', 'eventWink', 'eventSmile', 'eventFamiliar', 'eventKeepSound', 'eventNoSound', 'greetingSetting', 'ritualSetting', 'soundSetting']) $(id).disabled = tabConflict;
     }
     function respond(ritual, closing = false) {
       face.touch(true, closing);
@@ -4091,18 +4165,18 @@
       else { face.touch(true); face.play(state.greeting === 'wink' ? 'winkR' : 'smile', true); }
       greetingTouch(state.greeting === 'familiar' ? state.ritual : 'head');
     });
-    $('beginForm').addEventListener('submit', (event) => {
-      event.preventDefault();
+    function begin(minutes) {
       if (tabConflict) return;
-      const minutes = Number(new FormData(event.currentTarget).get('minutes'));
       if (!beginSession(state, { minutes, intent: $('intentInput').value, station: STATIONS[stationIndex].name, id: crypto.randomUUID() })) return;
       receipt = ''; greetingPending = false; dueAnnounced = false;
       $('sessionAnnouncement').hidden = true;
       document.body.classList.remove('is-exploring');
       $('exploreBtn').setAttribute('aria-expanded', 'false');
-      if (!state.quiet) start(); else { stopMusic(); face.touch(true); }
+      if (minutes !== 1 && !state.quiet) start(); else { stopMusic(); face.touch(true, true); }
       save(); render(); $('pauseBtn').focus();
-    });
+    }
+    $('beginForm').addEventListener('submit', (event) => {event.preventDefault();begin(Number(new FormData(event.currentTarget).get('minutes')));});
+    $('visitBtn').addEventListener('click', () => begin(1));
     $('pauseBtn').addEventListener('click', () => {
       if (!state.active || tabConflict) return;
       if (state.active.phase === 'running') { pauseSession(state); stopMusic(); }
@@ -4167,6 +4241,7 @@
     });
     function renderMemory() {
       $('togetherText').textContent = state.records.length ? `我们在 ${togetherDays(state)} 个日子里一起待过。不用连续，也不怕隔几天回来。` : '第一次收工后，我们会在这里留下经历。';
+      renderBackups(); renderSync();
       $('habitText').textContent = `欢迎：${greetingName(state.greeting)} · 收工：${state.ritual ? ritualName(state.ritual) : '慢慢定下来'} · 旋律：${state.closingSound === 'chime' ? '三音旋律' : '不加旋律'}`;
       $('greetingSetting').value = state.greeting;
       $('ritualSetting').value = state.ritual || '';
@@ -4178,7 +4253,7 @@
         const li = document.createElement('li'), detail = document.createElement('small'), intent = document.createElement('strong');
         const [year, month, date] = r.day.split('-');
         const day = `${year}年${Number(month)}月${Number(date)}日`;
-        li.append(`${day} · 一起待了${durationText(r.elapsedMs)}`);
+        li.append(`${day} · ${r.kind === 'visit' ? '来看看小狐' : '一起待了'}${durationText(r.elapsedMs)}`);
         intent.textContent = r.intent || '一起待了一会儿';
         detail.textContent = [r.station, outcomeName[r.outcome], r.ritual ? ritualName(r.ritual) : '安静收工', r.closingSound === 'chime' ? '三音旋律' : ''].filter(Boolean).join(' · ');
         li.append(intent, detail); list.append(li);
@@ -4248,14 +4323,8 @@
         if (file.size > 5 * 1024 * 1024) throw new Error('备份超过 5 MB，请确认选择的是狐伴存档。');
         const restored = parseState(await file.text());
         recoverSession(restored);
-        if (!confirm('恢复会替换当前名字、习惯和经历。建议先下载当前备份，确定继续吗？')) return;
-        // Write first: a quota/permission failure leaves the current state untouched.
-        localStorage.setItem(SAVE_KEY, JSON.stringify(restored));
-        state = restored; writeLocked = tabConflict = false; saveWarning = ''; receipt = '';
-        greeted = false; greetingPending = !!state.ritual || state.greeting !== 'familiar'; dueAnnounced = false;
-        stopMusic(); radio.setOutput(state.volume, state.quiet);
-        render(); renderMemory();
-        if (!$('memoryDialog').open) greet();
+        if (!confirm('恢复会替换当前名字、习惯和经历，并断开当前云端连接。建议先下载当前备份，确定继续吗？')) return;
+        sync?.disconnect(); replaceLocal(restored); renderSync();
         $('importNotice').textContent = '备份已恢复。';
       } catch (error) { $('importNotice').textContent = error.message || '恢复失败，原存档未被替换。'; }
     });
@@ -4291,9 +4360,51 @@
       saveWarning = '另一个页面更新了经历，本页已暂停。请刷新以查看最新存档；本页尚未保存的经历可以先下载备份。';
       render();
     });
+    function renderSync() {
+      const enabled=sync?.enabled;
+      for(const id of ['syncNow','syncDisconnect','syncDelete','syncReveal']) $(id).disabled=!enabled || tabConflict;
+      $('syncCreate').hidden=!!enabled;
+      $('syncJoin').hidden=!!enabled;
+      $('syncCode').readOnly=!!enabled;
+      if(enabled) $('syncCode').value=sync.code;
+    }
+    sync=createSync({
+      read:()=>state,
+      apply:merged=>{
+        if(writeLocked || tabConflict) throw new Error('本机存档暂不可写，请先下载备份并刷新。');
+        const changed=habits(state)!==habits(merged);state=merged;applyingSync=true;
+        try { if(!save()) throw new Error('云端经历已取得，但本机空间不足，请下载备份。'); } finally {applyingSync=false;}
+        render();if($('memoryDialog').open) renderMemory();if(changed) changeGreeting();
+      },
+      status:text=>{$('syncStatus').textContent=text;renderSync();},
+      conflict:()=>{$('syncConflict').hidden=false;}
+    });
+    async function syncAction(action) {try {if(writeLocked || tabConflict) throw new Error('先备份并刷新本页，再连接云端。');await action();renderSync();}catch(error){$('syncStatus').textContent=error.message;}}
+    $('syncCreate').addEventListener('click',()=>syncAction(()=>sync.create()));
+    $('syncJoin').addEventListener('click',()=>syncAction(()=>sync.join(normalizeCode($('syncCode').value))));
+    $('syncNow').addEventListener('click',()=>syncAction(()=>sync.run()));
+    $('syncReveal').addEventListener('click',()=>{$('syncCode').type=$('syncCode').type==='password'?'text':'password';});
+    $('syncDisconnect').addEventListener('click',()=>syncAction(()=>sync.disconnect()));
+    $('syncDelete').addEventListener('click',()=>{if(confirm('删除云端备份后，其他设备不能再用这份同步码获取它。本机经历保留，确定删除吗？'))syncAction(()=>sync.remove());});
+    for(const [id,choice] of [['syncLocal','local'],['syncRemote','remote']]) $(id).addEventListener('click',()=>{$('syncConflict').hidden=true;syncAction(()=>sync.run(choice));});
+    window.addEventListener('online',()=>sync.run());
+    setInterval(()=>{if(!document.hidden && !tabConflict && !writeLocked) sync.run();},60000);
+    if(!writeLocked && !tabConflict && sync.enabled) sync.run();
+    $('performanceSetting').addEventListener('change',event=>{performanceMode=event.target.value;try{localStorage.setItem('foxkin.performance',performanceMode);}catch{} onResize();});
+    platform=setupPlatform({canvas,active:()=>!!state.active,
+      onFloat:win=>{
+        timer.disconnect();renderer.setAnimationLoop(null);
+        const loop=()=>{if(win.closed)return;animateFrame();win.requestAnimationFrame(loop);};loop();
+      },
+      onReturn:()=>{timer.connect(document);renderer.setAnimationLoop(animateFrame);onResize();}
+    });
+    document.addEventListener('freeze',()=>{snapshot();recoverSession(state);stopMusic();save();});
+    document.addEventListener('resume',()=>{pulse();render();});
     if (migrateOnLoad) save();
     render();
     return { greet, greetingTouch, enableMusic,
+      get floating() { return !!platform?.floating; },
+      get lowPower() { return performanceMode === 'economy' || (performanceMode === 'auto' && (state.quiet || window.innerWidth <= 640 || reducedMotion.matches)); },
       get quiet() { return state.quiet; },
       get greetingPose() { return reducedMotion.matches && greetingPending && !state.active ? state.greeting : null; },
       get greetingRitual() { return greetingPending && !state.active && state.greeting === 'familiar' ? state.ritual : null; },
