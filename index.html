@@ -856,7 +856,7 @@
       <p class="sound-note">开启后，名字、习惯和共同经历会加密备份到云端。正在进行的陪伴和音量留在本机。同步码是解密钥匙，请私下保管；丢失后无法找回。</p>
       <button class="soft-btn" id="syncCreate" type="button">开启自动备份</button>
       <label>私密同步码<input class="intent" id="syncCode" type="password" autocomplete="off" spellcheck="false" maxlength="100" placeholder="在另一台设备输入同步码" /></label>
-      <div class="comp-row"><button class="soft-btn" id="syncJoin" type="button">连接已有存档</button><button class="soft-btn" id="syncReveal" type="button">显示／隐藏同步码</button></div>
+      <div class="comp-row"><button class="soft-btn" id="syncJoin" type="button">连接已有存档</button><button class="soft-btn" id="syncReveal" type="button">显示／隐藏同步码</button><button class="soft-btn" id="syncCopy" type="button">复制同步码</button></div>
       <div class="comp-row"><button class="soft-btn" id="syncNow" type="button">立即同步</button><button class="soft-btn" id="syncDisconnect" type="button">断开本机</button><button class="soft-btn" id="syncDelete" type="button">删除云端备份</button></div>
       <div id="syncConflict" hidden><p>两端的名字或习惯都变过。经历会合并，习惯保留哪一端？</p><div class="comp-row"><button class="soft-btn" id="syncLocal" type="button">保留本机习惯</button><button class="soft-btn" id="syncRemote" type="button">采用云端习惯</button></div></div>
       <p class="sound-note" id="syncStatus" role="status">尚未开启。现在只保存在本机。</p>
@@ -1007,7 +1007,6 @@
      配置
      ========================================================= */
   const MODEL_URL  = 'fox-web.glb';
-  const THREE_VER  = '0.186.1';
   const DRACO_PATH = './vendor/three/examples/jsm/libs/draco/gltf/';
 
   /**
@@ -1432,7 +1431,7 @@
       o.connect(g); o2.connect(g2); g2.connect(g);
       g.gain.linearRampToValueAtTime(big ? 0.32 : 0.22, t + 0.008);
       g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
-      if (this.ctx.state !== 'running') this.ctx.resume();
+      if (this.ctx.state !== 'running') this.ctx.resume().catch(() => toast('声音暂时没有打开，可以再试一次。'));
     }
 
     chime() {
@@ -1456,7 +1455,7 @@
     /** 表情音效。gesture = 由用户点击触发，可以顺手创建/唤醒 AudioContext */
     sfx(name, gesture) {
       if (!this.ctx) { if (!gesture) return; this.init(); }
-      if (this.ctx.state !== 'running') { if (!gesture) return; this.ctx.resume(); }
+      if (this.ctx.state !== 'running') { if (!gesture) return; this.ctx.resume().catch(() => toast('声音暂时没有打开，可以再试一次。')); }
       const ctx = this.ctx, t = ctx.currentTime + 0.005;
       const g = ctx.createGain();
       g.gain.setValueAtTime(0, t);
@@ -1618,7 +1617,7 @@
 
     start() {
       this.init();
-      if (this.ctx.state !== 'running') this.ctx.resume();
+      if (this.ctx.state !== 'running') this.ctx.resume().catch(() => toast('声音暂时没有打开，可以再试一次。'));
       if (this.playing) return;
       this.playing = true;
       const now = this.ctx.currentTime;
@@ -4091,14 +4090,16 @@
       if (!a) return;
       const remaining = Math.max(0, a.plannedMs - elapsed(a));
       const seconds = Math.ceil(remaining / 1000);
-      $('sessionClock').textContent = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      const visit = a.kind === 'visit';
+      $('sessionClock').textContent = visit ? '在这里' : `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      $('sessionClock').setAttribute('aria-label', visit ? '这次探望' : '剩余陪伴时间');
       const recovery = a.phase === 'recovery';
-      $('sessionHeading').textContent = recovery ? '上次的陪伴，接着来吗？' : a.phase === 'paused' ? '歇一会儿也很好。' : remaining ? '你做你的事，我在这里。' : '这段时间到了，慢慢收工。';
+      $('sessionHeading').textContent = recovery ? '上次的陪伴，接着来吗？' : a.phase === 'paused' ? '歇一会儿也很好。' : visit ? '来看看我，坐一小会儿。' : remaining ? '你做你的事，我在这里。' : '这段时间到了，慢慢收工。';
       $('endBtn').textContent = a.kind === 'visit' ? '结束探望' : '准备收工';
-      $('sessionCopy').textContent = recovery ? '只保留上次确认的时间，关闭或休眠期间没有计入。' : a.phase === 'paused' ? '暂停期间不会计时。想继续时，我还在。' : remaining ? a.intent || '可以去做自己的事，随时回来。' : '还想继续也可以，我等你回来打个招呼。';
+      $('sessionCopy').textContent = recovery ? '只保留上次确认的时间，关闭或休眠期间没有计入。' : a.phase === 'paused' ? '暂停期间不会计时。想继续时，我还在。' : visit ? '摸摸头、碰碰鼻子。想离开时打个招呼，就能留下这次探望。' : remaining ? a.intent || '可以去做自己的事，随时回来。' : '还想继续也可以，我等你回来打个招呼。';
       $('pauseBtn').textContent = recovery ? '继续上次的陪伴' : a.phase === 'paused' ? '继续陪伴' : '暂停陪伴';
-      $('extendBtn').hidden = !!remaining || recovery || a.phase === 'closing';
-      if (!remaining && a.phase === 'running' && !dueAnnounced) {
+      $('extendBtn').hidden = visit || !!remaining || recovery || a.phase === 'closing';
+      if (!visit && !remaining && a.phase === 'running' && !dueAnnounced) {
         dueAnnounced = true;
         $('sessionAnnouncement').hidden = false;
         $('sessionAnnouncement').textContent = '时间到了，可以收工，也可以继续陪伴。';
@@ -4253,7 +4254,7 @@
         const li = document.createElement('li'), detail = document.createElement('small'), intent = document.createElement('strong');
         const [year, month, date] = r.day.split('-');
         const day = `${year}年${Number(month)}月${Number(date)}日`;
-        li.append(`${day} · ${r.kind === 'visit' ? '来看看小狐' : '一起待了'}${durationText(r.elapsedMs)}`);
+        li.append(`${day} · ${r.kind === 'visit' ? `来看看${state.name} · ` : '一起待了'}${durationText(r.elapsedMs)}`);
         intent.textContent = r.intent || '一起待了一会儿';
         detail.textContent = [r.station, outcomeName[r.outcome], r.ritual ? ritualName(r.ritual) : '安静收工', r.closingSound === 'chime' ? '三音旋律' : ''].filter(Boolean).join(' · ');
         li.append(intent, detail); list.append(li);
@@ -4362,7 +4363,7 @@
     });
     function renderSync() {
       const enabled=sync?.enabled;
-      for(const id of ['syncNow','syncDisconnect','syncDelete','syncReveal']) $(id).disabled=!enabled || tabConflict;
+      for(const id of ['syncNow','syncDisconnect','syncDelete','syncReveal','syncCopy']) $(id).disabled=!enabled || tabConflict;
       $('syncCreate').hidden=!!enabled;
       $('syncJoin').hidden=!!enabled;
       $('syncCode').readOnly=!!enabled;
@@ -4384,6 +4385,10 @@
     $('syncJoin').addEventListener('click',()=>syncAction(()=>sync.join(normalizeCode($('syncCode').value))));
     $('syncNow').addEventListener('click',()=>syncAction(()=>sync.run()));
     $('syncReveal').addEventListener('click',()=>{$('syncCode').type=$('syncCode').type==='password'?'text':'password';});
+    $('syncCopy').addEventListener('click',async()=>{
+      try {await navigator.clipboard.writeText(sync.code);$('syncStatus').textContent='已复制。只在自己的另一台设备输入，请勿公开分享。';}
+      catch {$('syncStatus').textContent='浏览器暂不允许复制，请显示同步码后手动复制。';}
+    });
     $('syncDisconnect').addEventListener('click',()=>syncAction(()=>sync.disconnect()));
     $('syncDelete').addEventListener('click',()=>{if(confirm('删除云端备份后，其他设备不能再用这份同步码获取它。本机经历保留，确定删除吗？'))syncAction(()=>sync.remove());});
     for(const [id,choice] of [['syncLocal','local'],['syncRemote','remote']]) $(id).addEventListener('click',()=>{$('syncConflict').hidden=true;syncAction(()=>sync.run(choice));});
@@ -4398,13 +4403,13 @@
       },
       onReturn:()=>{timer.connect(document);renderer.setAnimationLoop(animateFrame);onResize();}
     });
-    document.addEventListener('freeze',()=>{snapshot();recoverSession(state);stopMusic();save();});
+    document.addEventListener('freeze',()=>{snapshot();recoverSession(state);stopMusic();save();render();});
     document.addEventListener('resume',()=>{pulse();render();});
     if (migrateOnLoad) save();
     render();
     return { greet, greetingTouch, enableMusic,
       get floating() { return !!platform?.floating; },
-      get lowPower() { return performanceMode === 'economy' || (performanceMode === 'auto' && (state.quiet || window.innerWidth <= 640 || reducedMotion.matches)); },
+      get lowPower() { return performanceMode === 'economy' || (performanceMode === 'auto' && (state.quiet || !radio.playing || window.innerWidth <= 640 || reducedMotion.matches)); },
       get quiet() { return state.quiet; },
       get greetingPose() { return reducedMotion.matches && greetingPending && !state.active ? state.greeting : null; },
       get greetingRitual() { return greetingPending && !state.active && state.greeting === 'familiar' ? state.ritual : null; },

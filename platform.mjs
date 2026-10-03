@@ -31,13 +31,13 @@ export function setupPlatform({canvas,active,onReturn,onFloat}) {
   });
   const pipButton=$('pipBtn');
   pipButton.disabled=!('documentPictureInPicture' in window) || !canvas.captureStream;
-  $('pipSupport').textContent=pipButton.disabled?'当前浏览器可用独立小窗；悬浮模式需要支持 Document Picture-in-Picture 的浏览器。':'悬浮小窗会保持在其他窗口上方；关闭小窗不结束陪伴。';
+  $('pipSupport').textContent=pipButton.disabled?'当前浏览器可用独立小窗，暂不支持悬浮模式。':'悬浮小窗会保持在其他窗口上方；关闭小窗不结束陪伴。';
   pipButton.addEventListener('click',async()=>{
     if(pip){pip.close();return;}
     try {
       pip=await window.documentPictureInPicture.requestWindow({width:360,height:420});
       const doc=pip.document;doc.title='狐伴 · 在这里';
-      const style=doc.createElement('style');style.textContent='body{margin:0;background:#101830;color:#f3f5ff;font:14px system-ui;text-align:center}video{width:100%;height:290px;object-fit:contain}p{margin:8px}button{font:inherit;color:inherit;background:#293657;border:0;border-radius:12px;padding:9px 12px;margin:4px}button:focus-visible{outline:2px solid #f2a461}';doc.head.append(style);
+      const style=doc.createElement('style');style.textContent='body{margin:0;background:#101830;color:#f3f5ff;font:14px system-ui;text-align:center}video{width:100%;height:calc(100vh - 154px);min-height:120px;object-fit:contain}p{margin:8px}button{font:inherit;color:inherit;background:#293657;border:0;border-radius:12px;padding:9px 12px;margin:4px}button:focus-visible{outline:2px solid #f2a461}';doc.head.append(style);
       const video=doc.createElement('video');video.autoplay=true;video.muted=true;video.playsInline=true;
       stream=canvas.captureStream(20);video.srcObject=stream;
       const label=doc.createElement('p'),clock=doc.createElement('p'),controls=doc.createElement('div');
